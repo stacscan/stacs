@@ -1,0 +1,7 @@
+{
+    "include": [
+        "002-framework.valid.json",
+        "002-system.valid.json"
+    ],
+    "ignore": []
+}

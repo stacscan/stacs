@@ -1,0 +1,13 @@
+{
+    "include": [],
+    "pack": [
+        {
+            "module": "rules",
+            "path": "credential/pki/rsa/der.yar"
+        },
+        {
+            "module": "rules",
+            "path": "credential/pki/rsa/pem.yar"
+        }
+    ]
+}

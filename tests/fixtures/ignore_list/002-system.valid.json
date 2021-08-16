@@ -1,0 +1,29 @@
+{
+    "include": [],
+    "ignore": [
+        {
+            "pattern": ".*/libexample\\.so$",
+            "reason": "libexample contains false positives due to a reason."
+        },
+        {
+            "pattern": ".*/libssl.*?\\.so$",
+            "reason": "Ignore all hash rules inside version X.Y.Z of libssl",
+            "references": [
+                "CredentialHashMD5",
+                "CredentialHashSHA1",
+                "CredentialHashSHA256",
+                "CredentialHashSHA512"
+            ]
+        },
+        {
+            "md5": "e95348ed81f439d0a73a18835bd78eec",
+            "reason": "Ignore all hash rules inside version X.Y.Z of example file",
+            "references": [
+                "CredentialHashMD5",
+                "CredentialHashSHA1",
+                "CredentialHashSHA256",
+                "CredentialHashSHA512"
+            ]
+        }
+    ]
+}

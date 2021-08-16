@@ -1,0 +1,9 @@
+{
+    "include": [],
+    "ignore": [
+        {
+            "pattern": ".*/tests/.*",
+            "reason": "Test fixtures contain example credentials."
+        }
+    ]
+}

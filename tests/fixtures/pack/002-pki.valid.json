@@ -1,0 +1,7 @@
+{
+    "include": [
+        "002-pki-rsa.valid.json",
+        "002-pki-dsa.valid.json"
+    ],
+    "pack": []
+}

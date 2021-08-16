@@ -1,0 +1,8 @@
+{
+    "ignore": [
+        {
+            "pattern": "src/crypto/rsa\\.c",
+            "reason": "PEM format RSA header and trailer constants due to parser."
+        }
+    ]
+}

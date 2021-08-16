@@ -1,0 +1,13 @@
+{
+    "include": [],
+    "pack": [
+        {
+            "module": "rules",
+            "path": "credential/cloud/aws/access_key.yar"
+        },
+        {
+            "module": "rules",
+            "path": "credential/cloud/gcp/service_account.yar"
+        }
+    ]
+}

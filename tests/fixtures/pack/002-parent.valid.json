@@ -1,0 +1,7 @@
+{
+    "include": [
+        "002-cloud.valid.json",
+        "002-pki.valid.json"
+    ],
+    "pack": []
+}

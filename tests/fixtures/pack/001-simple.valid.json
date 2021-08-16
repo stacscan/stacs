@@ -1,0 +1,9 @@
+{
+    "include": [],
+    "pack": [
+        {
+            "module": "rules",
+            "path": "all.yar"
+        }
+    ]
+}
