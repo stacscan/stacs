@@ -3,6 +3,7 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
+import base64
 import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -109,12 +110,28 @@ def render(
 
         # Create an artifactContent (SARIF v2.1.0 Section 3.3) entry to track the sample
         # of the finding.
+        context_content = {}
         artifact_content = {}
 
         if finding.sample.binary:
             artifact_content["binary"] = finding.sample.finding
+            # Unencode and then re-encode the sample into a single B64 string to provide
+            # context.
+            context_content["binary"] = base64.b64encode(
+                base64.b64decode(finding.sample.before)
+                + base64.b64decode(finding.sample.finding)
+                + base64.b64decode(finding.sample.after)
+            )
         else:
             artifact_content["text"] = finding.sample.finding
+            context_content["text"] = (
+                finding.sample.before + finding.sample.finding + finding.sample.after
+            )
+
+        # Create a new contextRegion (SARIF v2.1.0 Section 3.29.5) to provide contextual
+        # information about the finding, but do not include the byte or line number
+        # offset.
+        context = {"snippet": context_content}
 
         # Create a new region (SARIF v2.1.0 Section 3.30) to track the location of the
         # finding and the sample.
@@ -140,6 +157,7 @@ def render(
         physical_location = {
             "physicalLocation": {
                 "region": region,
+                "contextRegion": context,
                 "artifactLocation": {
                     "uri": relative_path,
                     "index": index,
