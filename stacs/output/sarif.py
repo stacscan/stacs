@@ -117,11 +117,15 @@ def render(
             artifact_content["binary"] = finding.sample.finding
             # Unencode and then re-encode the sample into a single B64 string to provide
             # context.
-            context_content["binary"] = base64.b64encode(
-                base64.b64decode(finding.sample.before)
-                + base64.b64decode(finding.sample.finding)
-                + base64.b64decode(finding.sample.after)
+            context_content["binary"] = str(
+                base64.b64encode(
+                    base64.b64decode(finding.sample.before)
+                    + base64.b64decode(finding.sample.finding)
+                    + base64.b64decode(finding.sample.after)
+                ),
+                "utf-8",
             )
+            print(context_content["binary"])
         else:
             artifact_content["text"] = finding.sample.finding
             context_content["text"] = (
