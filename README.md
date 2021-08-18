@@ -5,7 +5,7 @@
 [![Shield](https://img.shields.io/twitter/follow/stacscan?style=flat-square)](https://twitter.com/stacscan)
 <p align="center">
     <br /><br />
-    <img src="./docs/images/STACS-Logo-RGB.small.png?raw=true">
+    <img src="https://www.github.com/stacscan/stacs/blob/main/docs/images/STACS-Logo-RGB.small.png?raw=true">
 </p>
 <p align="center">
     <br />
@@ -149,7 +149,7 @@ Currently, the only output format is SARIF v2.1.0. There are a number of viewers
 available which make this data easier to read, such as [this great web based viewer from](https://microsoft.github.io/sarif-web-component/) Microsoft. An example of the findings from a Docker container
 image has been included below:
 
-![Microsoft SARIF Viewer Output](./docs/images/SARIF-Viewer-Example.png)
+![Microsoft SARIF Viewer Output](https://www.github.com/stacscan/stacs/blob/main/docs/images/SARIF-Viewer-Example.png)
 
 #### The performance is really, really bad when running in Docker on macOS!
 
