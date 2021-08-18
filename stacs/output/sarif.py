@@ -125,7 +125,6 @@ def render(
                 ),
                 "utf-8",
             )
-            print(context_content["binary"])
         else:
             artifact_content["text"] = finding.sample.finding
             context_content["text"] = (
