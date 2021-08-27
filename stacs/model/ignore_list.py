@@ -113,5 +113,5 @@ def from_file(filename: str) -> Format:
 
     # Finally strip the included ignore lists from the entry, as these have been
     # resolved, returning the loaded ignore lists to the caller.
-    parent_list.include = []
+    parent_list.include.clear()
     return parent_list
