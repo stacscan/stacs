@@ -53,8 +53,8 @@ def from_file(filename: str) -> Format:
             if not entry.path.startswith("/"):
                 # Resolve and update the path.
                 entry.path = os.path.join(parent_path, entry.path)
-        # Roll over the include list and replace all entries with a fully qualified path,
-        # if not already set.
+        # Roll over the include list and replace all entries with a fully qualified
+        # path, if not already set.
         for index, path in enumerate(parent_pack.include):
             if not path.startswith("/"):
                 parent_pack.include[index] = os.path.join(parent_path, path)

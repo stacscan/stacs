@@ -3,6 +3,7 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
+from typing import List
 from pydantic import BaseModel, Extra, Field
 
 
@@ -33,7 +34,7 @@ class Entry(BaseModel, extra=Extra.forbid):
 class Format(BaseModel, extra=Extra.forbid):
     """Defines the schema of a manifest file."""
 
-    files: list[Entry] = Field(
+    files: List[Entry] = Field(
         [],
         title="A list of files to scan.",
     )
