@@ -108,7 +108,7 @@ def from_file(filename: str) -> Format:
 
     # Recursively load included ignore lists.
     for file in parent_list.include:
-        child_pack = from_file(os.path.join(parent_path, file))
+        child_pack = from_file(file)
         parent_list.ignore.extend(child_pack.ignore)
 
     # Finally strip the included ignore lists from the entry, as these have been
