@@ -101,6 +101,7 @@ def from_file(filename: str) -> Format:
         # Roll over the include list and replace all entries with a fully qualified path,
         # if not already set.
         for index, path in enumerate(parent_list.include):
+            parent_list.include[index] = os.path.expanduser(path)
             if not path.startswith("/"):
                 parent_list.include[index] = os.path.join(parent_path, path)
     except (OSError, json.JSONDecodeError) as err:

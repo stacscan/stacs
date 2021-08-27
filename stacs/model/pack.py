@@ -49,6 +49,7 @@ def from_file(filename: str) -> Format:
 
         # Roll over the pack and ensure any entries are fully qualified.
         for entry in parent_pack.pack:
+            entry.path = os.path.expanduser(entry.path)
             if not entry.path.startswith("/"):
                 # Resolve and update the path.
                 entry.path = os.path.join(parent_path, entry.path)
