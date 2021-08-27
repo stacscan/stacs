@@ -91,7 +91,7 @@ class Format(BaseModel, extra=Extra.forbid):
 def from_file(filename: str) -> Format:
     """Load an ignore list from file, returning a rendered down and complete list."""
     parent_file = os.path.abspath(os.path.expanduser(filename))
-    parent_path = os.path.dirname(os.path.abspath(os.path.expanduser(filename)))
+    parent_path = os.path.dirname(parent_file)
 
     # Load the parent ignore list, and then recurse as needed to handle includes.
     try:
@@ -102,8 +102,7 @@ def from_file(filename: str) -> Format:
         # if not already set.
         for index, path in enumerate(parent_list.include):
             if not path.startswith("/"):
-                del parent_list.include[index]
-                parent_list.include.insert(index, os.path.join(parent_path, path))
+                parent_list.include[index] = os.path.join(parent_path, path)
     except (OSError, json.JSONDecodeError) as err:
         raise STACSException(err)
 
