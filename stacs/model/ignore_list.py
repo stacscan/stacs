@@ -98,7 +98,7 @@ def from_file(filename: str) -> Format:
         with open(parent_file, "r") as fin:
             parent_list = Format(**json.load(fin))
 
-        # Roll over the ignore list and replace all entries with a fully qualified path,
+        # Roll over the include list and replace all entries with a fully qualified path,
         # if not already set.
         for index, path in enumerate(parent_list.include):
             if not path.startswith("/"):
