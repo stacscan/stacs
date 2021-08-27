@@ -150,11 +150,9 @@ def get_mimetype(chunk: bytes) -> str:
     for name, options in MIME_TYPE_HANDLERS.items():
         offset = options["offset"]
         magic = options["magic"]
-
-        for candidate in magic:
-            if chunk[offset : (offset + len(candidate))] == candidate:  # noqa: E203
-                return name
-
+        
+        if chunk[offset : (offset + len(candidate))] in magic:
+            return name
     return None
 
 
@@ -166,39 +164,39 @@ def get_mimetype(chunk: bytes) -> str:
 MIME_TYPE_HANDLERS = {
     "application/x-tar": {
         "offset": 257,
-        "magic": [
-            bytearray([0x75, 0x73, 0x74, 0x61, 0x72]),
-        ],
+        "magic": set([
+            bytes([0x75, 0x73, 0x74, 0x61, 0x72]),
+        ]),
         "handler": tar_handler,
     },
     "application/gzip": {
         "offset": 0,
-        "magic": [
-            bytearray([0x1F, 0x8B]),
-        ],
+        "magic": set([
+            bytes([0x1F, 0x8B]),
+        ]),
         "handler": gzip_handler,
     },
     "application/x-bzip2": {
         "offset": 0,
-        "magic": [
-            bytearray([0x42, 0x5A, 0x68]),
-        ],
+        "magic": set([
+            bytes([0x42, 0x5A, 0x68]),
+        ]),
         "handler": bzip2_handler,
     },
     "application/zip": {
         "offset": 0,
-        "magic": [
-            bytearray([0x50, 0x4B, 0x03, 0x04]),
-            bytearray([0x50, 0x4B, 0x05, 0x06]),
-            bytearray([0x50, 0x4B, 0x07, 0x08]),
-        ],
+        "magic": set([
+            bytes([0x50, 0x4B, 0x03, 0x04]),
+            bytes([0x50, 0x4B, 0x05, 0x06]),
+            bytes([0x50, 0x4B, 0x07, 0x08]),
+        ]),
         "handler": zip_handler,
     },
     "application/x-xz": {
         "offset": 0,
-        "magic": [
-            bytearray([0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00]),
-        ],
+        "magic": set([
+            bytes([0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00]),
+        ]),
         "handler": lzma_handler,
     },
 }
