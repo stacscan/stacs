@@ -92,7 +92,7 @@ def main(
         findings = stacs.filter.ignore_list.process(findings, ignored)
 
     # Generate SARIF and output to STDOUT.
-    logger.info("Generaing SARIF from findings")
+    logger.info("Generating SARIF from findings")
     try:
         sarif = stacs.output.sarif.render(path, findings, pack)
     except stacs.exceptions.STACSException as err:

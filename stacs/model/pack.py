@@ -40,7 +40,7 @@ class Format(BaseModel, extra=Extra.forbid):
 def from_file(filename: str) -> Format:
     """Load a pack from file, returning a rendered down and complete pack."""
     parent_file = os.path.abspath(os.path.expanduser(filename))
-    parent_path = os.path.dirname(os.path.abspath(os.path.expanduser(filename)))
+    parent_path = os.path.dirname(parent_file)
 
     # Load the parent pack, and then recurse as needed to handle includes.
     try:
@@ -48,26 +48,25 @@ def from_file(filename: str) -> Format:
             parent_pack = Format(**json.load(fin))
 
         # Roll over the pack and ensure any entries are fully qualified.
-        for index, entry in enumerate(parent_pack.pack):
+        for entry in parent_pack.pack:
+            entry.path = os.path.expanduser(entry.path)
             if not entry.path.startswith("/"):
-                # Resolve the path.
-                qualified = Entry(
-                    path=os.path.join(parent_path, entry.path),
-                    module=entry.module,
-                )
-
-                # Swap the entry with one that's fully qualified.
-                del parent_pack.pack[index]
-                parent_pack.pack.insert(index, qualified)
+                # Resolve and update the path.
+                entry.path = os.path.join(parent_path, entry.path)
+        # Roll over the include list and replace all entries with a fully qualified
+        # path, if not already set.
+        for index, path in enumerate(parent_pack.include):
+            if not path.startswith("/"):
+                parent_pack.include[index] = os.path.join(parent_path, path)
     except (OSError, json.JSONDecodeError) as err:
         raise STACSException(err)
 
     # Recursively load included packs, adding results to the loaded pack.
     for file in parent_pack.include:
-        child_pack = from_file(os.path.join(parent_path, file))
+        child_pack = from_file(file)
         parent_pack.pack.extend(child_pack.pack)
 
     # Finally strip the included packs from the entry, as these have been resolved,
     # returning the loaded pack to the caller.
-    parent_pack.include = []
+    parent_pack.include.clear()
     return parent_pack

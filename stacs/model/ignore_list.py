@@ -91,28 +91,28 @@ class Format(BaseModel, extra=Extra.forbid):
 def from_file(filename: str) -> Format:
     """Load an ignore list from file, returning a rendered down and complete list."""
     parent_file = os.path.abspath(os.path.expanduser(filename))
-    parent_path = os.path.dirname(os.path.abspath(os.path.expanduser(filename)))
+    parent_path = os.path.dirname(parent_file)
 
     # Load the parent ignore list, and then recurse as needed to handle includes.
     try:
         with open(parent_file, "r") as fin:
             parent_list = Format(**json.load(fin))
 
-        # Roll over the ignore list and replace all entries with a fully qualified path,
-        # if not already set.
+        # Roll over the include list and replace all entries with a fully qualified,
+        # path, if not already set.
         for index, path in enumerate(parent_list.include):
+            parent_list.include[index] = os.path.expanduser(path)
             if not path.startswith("/"):
-                del parent_list.include[index]
-                parent_list.include.insert(index, os.path.join(parent_path, path))
+                parent_list.include[index] = os.path.join(parent_path, path)
     except (OSError, json.JSONDecodeError) as err:
         raise STACSException(err)
 
     # Recursively load included ignore lists.
     for file in parent_list.include:
-        child_pack = from_file(os.path.join(parent_path, file))
+        child_pack = from_file(file)
         parent_list.ignore.extend(child_pack.ignore)
 
     # Finally strip the included ignore lists from the entry, as these have been
     # resolved, returning the loaded ignore lists to the caller.
-    parent_list.include = []
+    parent_list.include.clear()
     return parent_list
