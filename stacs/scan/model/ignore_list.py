@@ -8,7 +8,7 @@ import os
 from typing import List
 
 from pydantic import BaseModel, Extra, Field, validator
-from stacs.exceptions import IgnoreListException, STACSException
+from stacs.scan.exceptions import IgnoreListException, STACSException
 
 
 class Entry(BaseModel, extra=Extra.forbid):
@@ -30,7 +30,7 @@ class Entry(BaseModel, extra=Extra.forbid):
         title="The MD5 sum of the file to ignore.",
     )
     module: str = Field(
-        "stacs.scanner.rules",
+        "rules",
         title="Which module to ignore findings from.",
     )
     references: List[str] = Field(

@@ -6,8 +6,8 @@ SPDX-License-Identifier: BSD-3-Clause
 import re
 from typing import List
 
-from stacs.exceptions import IgnoreListException
-from stacs.model import finding, ignore_list
+from stacs.scan.exceptions import IgnoreListException
+from stacs.scan.model import finding, ignore_list
 
 
 def by_pattern(finding: finding.Entry, ignore: ignore_list.Entry) -> bool:

@@ -3,4 +3,4 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-from stacs.entrypoint import cli  # noqa:F401
+from stacs.scan.entrypoint import cli  # noqa:F401

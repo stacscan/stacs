@@ -4,7 +4,7 @@ import json
 import os
 import unittest
 
-import stacs
+import stacs.scan
 
 
 class STACSModelAllowListTestCase(unittest.TestCase):
@@ -23,9 +23,9 @@ class STACSModelAllowListTestCase(unittest.TestCase):
     def test_simple(self):
         """Ensure that simple allow lists can be loaded."""
         with open(os.path.join(self.fixtures_path, "001-simple.valid.json"), "r") as f:
-            stacs.model.ignore_list.Format(**json.load(f))
+            stacs.scan.model.ignore_list.Format(**json.load(f))
 
     def test_hierarchical_loading(self):
         """Ensure that hierarchical allow lists can be loaded."""
         with open(os.path.join(self.fixtures_path, "002-project.valid.json"), "r") as f:
-            stacs.model.ignore_list.Format(**json.load(f))
+            stacs.scan.model.ignore_list.Format(**json.load(f))

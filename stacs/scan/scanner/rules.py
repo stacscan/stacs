@@ -10,10 +10,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
 import yara
-from stacs.constants import CHUNK_SIZE, WINDOW_SIZE
-from stacs.exceptions import FileAccessException, InvalidFormatException
-from stacs.loader import archive
-from stacs.model import finding, manifest, pack
+from stacs.scan.constants import CHUNK_SIZE, WINDOW_SIZE
+from stacs.scan.exceptions import FileAccessException, InvalidFormatException
+from stacs.scan.loader import archive
+from stacs.scan.model import finding, manifest, pack
 
 
 def is_binary(target: manifest.Entry) -> bool:

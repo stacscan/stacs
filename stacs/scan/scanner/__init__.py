@@ -3,7 +3,7 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-from stacs.scanner import rules
+from stacs.scan.scanner import rules
 
 # Export all enabled scanners.
 __all__ = [

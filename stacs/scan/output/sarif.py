@@ -8,8 +8,8 @@ import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from stacs import __about__, model
-from stacs.constants import ARCHIVE_FILE_SEPARATOR
+from stacs.scan import __about__, model
+from stacs.scan.constants import ARCHIVE_FILE_SEPARATOR
 
 # Only one SARIF version will be supported at a time.
 SARIF_VERSION = "2.1.0"

@@ -3,4 +3,4 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-from stacs.filter import ignore_list  # noqa: F401
+from stacs.scan.filter import ignore_list  # noqa: F401

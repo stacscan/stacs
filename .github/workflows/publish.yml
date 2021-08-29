@@ -22,7 +22,7 @@ jobs:
           RULES_VERSION="$(git rev-parse --short HEAD)"
           popd
           pip install .
-          STACS_VERSION="$(python -c 'from stacs.__about__ import __version__ ; print(__version__, end="")')"
+          STACS_VERSION="$(python -c 'from stacs.scan.__about__ import __version__ ; print(__version__, end="")')"
           echo "IMAGE_VERSION=${STACS_VERSION}-r${RULES_VERSION}" >> "${GITHUB_ENV}"
           echo "STACS_VERSION=${STACS_VERSION}" >> "${GITHUB_ENV}"
 

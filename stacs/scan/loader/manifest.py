@@ -5,7 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 #
 # TODO: Implement the manifest loader. This should take the contents of a manifest
-#       which matches the stacs.model.manifest.Format schema. It should also check
+#       which matches the stacs.scan.model.manifest.Format schema. It should also check
 #       whether all requested files exist, and generate MD5 sums for them if not
-#       specified in the manifest 'Entry' (stacs.model.manifest.Entry).
+#       specified in the manifest 'Entry' (stacs.scan.model.manifest.Entry).
 #
