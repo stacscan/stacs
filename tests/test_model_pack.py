@@ -4,7 +4,7 @@ import json
 import os
 import unittest
 
-import stacs
+import stacs.scan
 
 
 class STACSModelPackTestCase(unittest.TestCase):
@@ -23,4 +23,4 @@ class STACSModelPackTestCase(unittest.TestCase):
     def test_simple_pack(self):
         """Ensure that simple packs can be loaded."""
         with open(os.path.join(self.fixtures_path, "001-simple.valid.json"), "r") as f:
-            stacs.model.pack.Format(**json.load(f))
+            stacs.scan.model.pack.Format(**json.load(f))

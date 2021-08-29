@@ -11,10 +11,10 @@ import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
-from stacs.constants import ARCHIVE_FILE_SEPARATOR, CHUNK_SIZE
-from stacs.exceptions import FileAccessException
-from stacs.loader import archive
-from stacs.model.manifest import Entry
+from stacs.scan.constants import ARCHIVE_FILE_SEPARATOR, CHUNK_SIZE
+from stacs.scan.exceptions import FileAccessException
+from stacs.scan.loader import archive
+from stacs.scan.model.manifest import Entry
 
 logger = logging.getLogger(__name__)
 

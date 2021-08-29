@@ -12,8 +12,8 @@ import shutil
 import tarfile
 import zipfile
 
-from stacs.constants import CHUNK_SIZE
-from stacs.exceptions import FileAccessException, InvalidFileException
+from stacs.scan.constants import CHUNK_SIZE
+from stacs.scan.exceptions import FileAccessException, InvalidFileException
 
 
 def path_hash(filepath: str) -> str:

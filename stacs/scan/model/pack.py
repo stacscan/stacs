@@ -8,7 +8,7 @@ import os
 from typing import List
 
 from pydantic import BaseModel, Extra, Field
-from stacs.exceptions import STACSException
+from stacs.scan.exceptions import STACSException
 
 
 class Entry(BaseModel, extra=Extra.forbid):
