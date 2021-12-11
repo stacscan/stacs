@@ -21,10 +21,10 @@ and ignore lists, and SARIF reporting.
 
 ### What does STACS support?
 
-Currently, STACS supports recursive unpacking of tarballs, gzips, bzips, zips, and xz
-files. As STACS works on detected file types, rather than the filename, propriatary
-file formats based on these types are automatically supported (such as Docker images,
-Android APKs, and Java JAR fles).
+Currently, STACS supports recursive unpacking of tarballs, gzips, bzips, zips, 7z, iso,
+rpm and xz files. As STACS works on detected file types, rather than the filename,
+propriatary file formats based on these types are automatically supported (such as
+Docker images, Android APKs, and Java JAR fles).
 
 ### Who should use STACS?
 
