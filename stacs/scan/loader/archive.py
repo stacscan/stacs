@@ -6,12 +6,15 @@ SPDX-License-Identifier: BSD-3-Clause
 import bz2
 import gzip
 import hashlib
+import logging
 import lzma
 import os
 import shutil
 import tarfile
 import zipfile
+import libarchive.public
 
+from libarchive.exception import ArchiveError
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
 
@@ -23,6 +26,8 @@ def path_hash(filepath: str) -> str:
 
 def zip_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided archive."""
+    log = logging.getLogger(__name__)
+
     try:
         os.mkdir(directory, mode=0o700)
     except OSError as err:
@@ -33,7 +38,19 @@ def zip_handler(filepath: str, directory: str) -> None:
     # Attempt to unpack the zipfile to the new unpack directory.
     try:
         with zipfile.ZipFile(filepath, "r") as archive:
-            archive.extractall(directory)
+            try:
+                archive.extractall(directory)
+            except RuntimeError as err:
+                # Encrypted zips (why is this not a custom exception?!)
+                if "encrypted" in str(err):
+                    log.warn(
+                        f"Cannot process file in archive at {filepath}, skipping: {err}"
+                    )
+            except NotADirectoryError as err:
+                # Broken filepaths inside of ZIP.
+                log.warn(
+                    f"Cannot process file in archive at {filepath}, skipping: {err}"
+                )
     except zipfile.BadZipFile as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
@@ -140,6 +157,47 @@ def lzma_handler(filepath: str, directory: str) -> None:
         )
 
 
+def libarchive_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided archive with libarchive."""
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    # Attempt to unpack the archive to the new unpack directory.
+    try:
+        with libarchive.public.file_reader(filepath) as fin:
+            for entry in fin:
+                member = entry.pathname
+                member = member.lstrip("../")
+                member = member.lstrip("./")
+
+                destination = os.path.join(directory, member)
+                parent = os.path.dirname(destination)
+
+                # Handle odd cases where a file was created where a directory needs to
+                # be.
+                if os.path.exists(parent) and os.path.isfile(parent):
+                    os.unlink(parent)
+
+                # Create parent directories, as required.
+                if not os.path.isdir(parent):
+                    os.makedirs(parent)
+
+                with open(destination, "wb") as f:
+                    try:
+                        for block in entry.get_blocks():
+                            f.write(block)
+                    except ValueError as err:
+                        raise ArchiveError(err)
+    except ArchiveError as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
+        )
+
+
 def get_mimetype(chunk: bytes) -> str:
     """Attempts to locate the appropriate handler for a given file.
 
@@ -200,5 +258,26 @@ MIME_TYPE_HANDLERS = {
             bytearray([0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00]),
         ],
         "handler": lzma_handler,
+    },
+    "application/x-rpm": {
+        "offset": 0,
+        "magic": [
+            bytearray([0xED, 0xAB, 0xEE, 0xDB]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-iso9660-image": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x43, 0x44, 0x30, 0x30, 0x31]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-7z-compressed": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C]),
+        ],
+        "handler": libarchive_handler,
     },
 }
