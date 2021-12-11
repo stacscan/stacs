@@ -182,6 +182,9 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                 if os.path.exists(parent) and os.path.isfile(parent):
                     os.unlink(parent)
 
+                if os.path.isdir(destination):
+                    continue
+
                 # Create parent directories, as required.
                 if not os.path.isdir(parent):
                     os.makedirs(parent)
@@ -267,7 +270,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/x-iso9660-image": {
-        "offset": 0,
+        "offset": 0x8001,
         "magic": [
             bytearray([0x43, 0x44, 0x30, 0x30, 0x31]),
         ],
