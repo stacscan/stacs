@@ -15,6 +15,11 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libarchive13 libarchive-dev
+
       - name: Extract version
         run: |
           git clone https://www.github.com/stacscan/stacs-rules.git /tmp/stacs-rules
@@ -41,11 +46,6 @@ jobs:
           tags: stacscan/stacs:latest,stacscan/stacs:${{ env.IMAGE_VERSION }}
           build-args: |
             VERSION=${{ env.IMAGE_VERSION }}
-
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y libarchive13 libarchive-dev
 
       - name: Build Python package
         run: |
