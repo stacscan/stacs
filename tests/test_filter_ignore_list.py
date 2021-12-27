@@ -29,7 +29,7 @@ class STACSFilterIgnoreListTestCase(unittest.TestCase):
                 offset=300,
             ),
             source=stacs.scan.model.finding.Source(
-                module="rules",
+                module="stacs.scan.scanner.rules",
                 reference="SomeRule",
             ),
         )
@@ -76,7 +76,7 @@ class STACSFilterIgnoreListTestCase(unittest.TestCase):
                 offset=300,
             ),
             source=stacs.scan.model.finding.Source(
-                module="rules",
+                module="stacs.scan.scanner.rules",
                 reference="SomeRule",
             ),
         )
@@ -125,7 +125,7 @@ class STACSFilterIgnoreListTestCase(unittest.TestCase):
                 offset=300,
             ),
             source=stacs.scan.model.finding.Source(
-                module="rules",
+                module="stacs.scan.scanner.rules",
                 reference="SomeRule",
             ),
         )
