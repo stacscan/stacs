@@ -30,7 +30,7 @@ class Entry(BaseModel, extra=Extra.forbid):
         title="The MD5 sum of the file to ignore.",
     )
     module: str = Field(
-        "rules",
+        "stacs.scan.scanner.rules",
         title="Which module to ignore findings from.",
     )
     references: List[str] = Field(
