@@ -27,4 +27,12 @@ setup(
     packages=find_namespace_packages(include=["stacs.*"]),
     url=__uri__,
     version=__version__,
+    extras_require={
+        "development": [
+            "tox",
+            "black",
+            "flake8",
+            "isort",
+        ]
+    },
 )

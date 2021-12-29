@@ -112,7 +112,7 @@ def generate_location(target: manifest.Entry, offset: int) -> finding.Location:
 
     # Attempt to generate a line number for the finding.
     bytes_read = 0
-    line_number = 0
+    line_number = 1
     try:
         with open(target.path, "r") as fin:
             # Read in chunks, counting the number of newline characters up to the chunk
@@ -144,7 +144,7 @@ def generate_findings(target: manifest.Entry, match: yara.Match) -> List[finding
         # Add on information about the origin of the finding (that's us!)
         source = finding.Source(
             module=__name__,
-            reference=match.meta.get("name", "UNKNOWN"),
+            reference=match.rule,
             version=match.meta.get("version", "UNKNOWN"),
             description=match.meta.get("description"),
         )

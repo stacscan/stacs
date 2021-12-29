@@ -1,20 +1,13 @@
 {
-    "debug.allowBreakpointsEverywhere": true,
-    "python.formatting.provider": "black",
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
-    "python.sortImports.args": [
-        "--profile", "black"
-    ],
-    "[python]": {
-        "editor.wordBasedSuggestions": false,
-        "editor.formatOnSave": true,
-        "editor.tabSize": 4,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        }
+    "python.linting.enabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
     },
-    "[rust]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "rust-lang.rust",
-    }
+    "editor.rulers": [
+        88
+    ],
 }
