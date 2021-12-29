@@ -10,4 +10,4 @@ from stacs.scan.exceptions import NotImplementedException
 
 
 def render(findings: List[model.finding.Entry], pack: model.pack.Format) -> str:
-    return NotImplementedException("Markdown output not yet implemented, sorry!")
+    raise NotImplementedException("Markdown output not yet implemented, sorry!")
