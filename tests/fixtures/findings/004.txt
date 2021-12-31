@@ -1,0 +1,7 @@
+There is both plenty of data before and after the finding, so samples should operate
+properly and capture WINDOW_SIZE before and after.
+
+ghp_YWNjb3VudHMyM3JkZnNkZnNkZnNkZnNkZnNk
+
+Unlike the previous finding fixture (003) where the file ONLY contains the finding with
+no additional data.
