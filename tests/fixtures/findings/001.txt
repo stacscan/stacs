@@ -1,0 +1,5 @@
+Credential is at the end of file, with less than the WINDOW_SIZE available for a sample
+this should cause the after window to be reduced to only match the bytes remaining after
+the finding.
+
+ghp_YWNjb3VudHMyM3JkZnNkZnNkZnNkZnNkZnNk

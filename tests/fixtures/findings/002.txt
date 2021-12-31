@@ -1,0 +1,6 @@
+X
+
+ghp_YWNjb3VudHMyM3JkZnNkZnNkZnNkZnNkZnNk
+
+There is plenty of data after the finding, but the sample before the finding should not
+try and read past the start of the file.

@@ -62,12 +62,14 @@ def generate_sample(target: manifest.Entry, offset: int, size: int) -> finding.S
             before_sz = WINDOW_SIZE
             before_offset = offset - before_sz
 
-        if offset + WINDOW_SIZE > target_sz:
-            after_sz = target_sz - offset
-            after_offset = after_sz
+        # Ensure we read N bytes AFTER the entire match, not after the first byte of the
+        # match.
+        if offset + size + WINDOW_SIZE > target_sz:
+            after_sz = target_sz - (offset + size)
+            after_offset = target_sz - after_sz
         else:
             after_sz = WINDOW_SIZE
-            after_offset = offset + after_sz
+            after_offset = offset + size
 
         with open(target.path, "rb") as fin:
             # Seek to and read in the context before.
