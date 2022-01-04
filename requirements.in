@@ -1,4 +1,4 @@
 click
 yara-python
 pydantic
-libarchive
+python-libarchive
