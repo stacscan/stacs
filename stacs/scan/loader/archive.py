@@ -12,9 +12,8 @@ import os
 import shutil
 import tarfile
 import zipfile
-import libarchive.public
 
-from libarchive.exception import ArchiveError
+import libarchive
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
 
@@ -168,7 +167,7 @@ def libarchive_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the archive to the new unpack directory.
     try:
-        with libarchive.public.file_reader(filepath) as fin:
+        with libarchive.Archive(filepath) as fin:
             for entry in fin:
                 member = entry.pathname
                 member = member.lstrip("../")
@@ -189,13 +188,21 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                 if not os.path.isdir(parent):
                     os.makedirs(parent)
 
+                # If the entry is a directory, create it and move on.
+                if entry.isdir():
+                    os.makedirs(destination)
+                    continue
+
                 with open(destination, "wb") as f:
                     try:
-                        for block in entry.get_blocks():
+                        for block in fin.readstream(entry.size):
                             f.write(block)
-                    except ValueError as err:
-                        raise ArchiveError(err)
-    except ArchiveError as err:
+                    except Exception as err:
+                        # python-libarchive unfortunately raises Exception on errors,
+                        # so we have a rather generic handler here, so we'll remap it to
+                        # something a bit more handleable.
+                        raise ValueError(err)
+    except ValueError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
