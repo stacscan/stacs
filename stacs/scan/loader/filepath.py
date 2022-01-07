@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
 from stacs.scan.constants import ARCHIVE_FILE_SEPARATOR, CHUNK_SIZE
-from stacs.scan.exceptions import FileAccessException
+from stacs.scan.exceptions import FileAccessException, InvalidFileException
 from stacs.scan.loader import archive
 from stacs.scan.model.manifest import Entry
 
@@ -87,6 +87,7 @@ def finder(
     cache: str,
     workers: int = 10,
     skip_on_eacces: bool = True,
+    skip_on_corrupt: bool = False,
 ) -> List[Entry]:
     """Processes the input path, returning a list of all files and their hashes."""
     entries = []
@@ -127,7 +128,18 @@ def finder(
                 destination = os.path.join(cache, archive.path_hash(result.path))
                 shutil.rmtree(destination, ignore_errors=True)
 
-                handler(result.path, destination)
+                try:
+                    handler(result.path, destination)
+                except InvalidFileException as err:
+                    # Only skip with a warning if explicitly configured to do so.
+                    if skip_on_corrupt:
+                        logger.warning(
+                            f"Skipping file at {result.path} due to error when "
+                            f"processing: {err}"
+                        )
+                    else:
+                        raise
+
                 for file in walker(destination, skip_on_eacces):
                     # The overlay path is a 'virtual' path that is constructed based on
                     # the archive the file appears inside of, and the path of the file
@@ -139,6 +151,7 @@ def finder(
                     else:
                         parent = result.path
 
+                    logger.debug(f"Processing {file}, extracted from archive {parent}")
                     overlay = (
                         f"{parent}"
                         f"{ARCHIVE_FILE_SEPARATOR}"
