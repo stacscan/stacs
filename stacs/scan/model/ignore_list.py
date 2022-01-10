@@ -57,14 +57,6 @@ class Entry(BaseModel, extra=Extra.forbid):
 
         return value
 
-    @validator("offset", "references", always=True)
-    def offset_and_references_requires_module(cls, value, values):
-        """Ensure that if offset or references is set, module is as well."""
-        if not values.get("module"):
-            raise IgnoreListException("Module must be set for this type of ignore.")
-
-        return value
-
     @validator("offset", always=True)
     def offset_and_refernces_both_set(cls, value, values):
         if value and len(values.get("references")) > 0:
