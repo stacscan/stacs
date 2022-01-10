@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# This wrapper is used to determine whether a stacs ignore is present in the scan
+# directory.
+#
+
+SCAN_DIR="/mnt/stacs/input"
+
+# If additional arguments are provided, use them instead of defaults.
+if [ "$#" -gt 0 ]; then
+    stacs "$@"
+else
+    # Use an ignore list, if present.
+    if [ -e "${SCAN_DIR}/stacs.ignore.json" ]; then
+        stacs \
+            --rule-pack /mnt/stacs/rules/credential.json \
+            --cache-directory /mnt/stacs/cache \
+            --ignore-list "${SCAN_DIR}/stacs.ignore.json" \
+            "${SCAN_DIR}/"
+    else
+        stacs \
+            --rule-pack /mnt/stacs/rules/credential.json \
+            --cache-directory /mnt/stacs/cache \
+            "${SCAN_DIR}/"
+    fi
+fi

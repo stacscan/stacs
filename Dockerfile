@@ -13,6 +13,8 @@ LABEL org.opencontainers.image.version=$VERSION
 WORKDIR /opt/stacs
 COPY requirements.txt setup.py setup.cfg ./
 COPY stacs ./stacs
+COPY wrapper/stacs-scan /usr/bin
+
 RUN apk add --no-cache git gcc musl-dev libarchive-dev libarchive && \
     pip install --no-cache-dir .
 
@@ -34,9 +36,4 @@ VOLUME /mnt/stacs/cache
 RUN apk del --purge gcc musl-dev git
 
 # Default to running stacs with the volume mounts.
-ENTRYPOINT ["stacs"]
-CMD [ \
-    "--rule-pack", "/mnt/stacs/rules/credential.json", \
-    "--cache-directory", "/mnt/stacs/cache", \
-    "/mnt/stacs/input" \
-]
+ENTRYPOINT ["stacs-scan"]
