@@ -2,10 +2,11 @@ name: Update
 
 on:
   workflow_dispatch:
-    release:
-      description: The tagged release version to rebuild with the latest rules.
-      default: 0.0.0
-      required: true
+    inputs:
+      release:
+        description: The tagged release version to rebuild with the latest rules.
+        default: 0.0.0
+        required: true
 
 jobs:
   update:
