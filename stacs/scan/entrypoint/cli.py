@@ -5,10 +5,26 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import logging
 import os
+import shutil
 import sys
+import time
+from types import TracebackType
+from typing import Callable
 
 import click
 import stacs
+
+
+def unlink_error(function: Callable, path: str, exc_info: TracebackType):
+    """Provides a mechanism to better handle failures to delete files after a run.
+
+    Currently, this just logs out. In future we should look to fix the permissions on
+    the path / parent and call func(path) to attempt the deletion again. However, we'll
+    need to ensure that path is actually part of the cache directory. So for now, we
+    log.
+    """
+    logger = logging.getLogger("stacs")
+    logger.warning(f"Unable to remove {path}")
 
 
 @click.command()
@@ -17,6 +33,11 @@ import stacs
     "--debug",
     is_flag=True,
     help="Increase verbosity of logs for debugging",
+)
+@click.option(
+    "--threads",
+    help="The number of threads to use when processing files",
+    default=10,
 )
 @click.option(
     "--rule-pack",
@@ -40,6 +61,7 @@ import stacs
 @click.argument("path")
 def main(
     debug: bool,
+    threads: int,
     rule_pack: str,
     ignore_list: str,
     skip_unprocessable: bool,
@@ -52,6 +74,7 @@ def main(
         format="%(asctime)s - %(process)d - [%(levelname)s] %(message)s",
     )
     logger = logging.getLogger("stacs")
+    logger.info(f"STACS running with {threads} threads")
 
     # Expand the input path.
     path = os.path.abspath(os.path.expanduser(path))
@@ -75,6 +98,15 @@ def main(
             logger.error(f"Unable to load ignore list: {err}")
             sys.exit(-1)
 
+    # Append a timestamp to the cache directory to reduce the chance of collisions.
+    cache_directory = os.path.join(cache_directory, str(int(time.time_ns() / 1000)))
+    try:
+        os.mkdir(cache_directory)
+        logger.info(f"Using cache directory at {cache_directory}")
+    except OSError as err:
+        logger.error(f"Unable to create cache directory at {cache_directory}: {err}")
+        sys.exit(-2)
+
     # Generate a list of candidate files to scan.
     logger.info(f"Attempting to get a list of files to scan from {path}")
     try:
@@ -82,6 +114,7 @@ def main(
             path,
             cache_directory,
             skip_on_corrupt=skip_unprocessable,
+            workers=threads,
         )
     except stacs.scan.exceptions.STACSException as err:
         logger.error(f"Unable to generate file list: {err}")
@@ -93,7 +126,9 @@ def main(
     findings = []
     for scanner in stacs.scan.scanner.__all__:
         try:
-            findings.extend(getattr(stacs.scan.scanner, scanner).run(targets, pack))
+            findings.extend(
+                getattr(stacs.scan.scanner, scanner).run(targets, pack, workers=threads)
+            )
         except stacs.scan.exceptions.InvalidFormatException as err:
             logger.error(f"Unable to load a rule in scanner {scanner}: {err}")
             continue
@@ -109,6 +144,9 @@ def main(
     except stacs.scan.exceptions.STACSException as err:
         logger.error(f"Unable to generate SARIF: {err}")
         sys.exit(-3)
+
+    # Clean-up cache directory.
+    shutil.rmtree(cache_directory, onerror=unlink_error)
 
     # TODO: Add file output as an option.
     logger.info(f"Found {len(findings)} findings")
