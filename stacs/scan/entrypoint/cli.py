@@ -9,7 +9,7 @@ import shutil
 import sys
 import time
 from types import TracebackType
-from typing import Callable
+from typing import Callable, List
 
 import click
 import stacs
@@ -58,7 +58,7 @@ def unlink_error(function: Callable, path: str, exc_info: TracebackType):
     help="The path to use as a cache - used when unpacking archives.",
     default=stacs.scan.constants.CACHE_DIRECTORY,
 )
-@click.argument("path")
+@click.argument("path", "paths", nargs=-1)
 def main(
     debug: bool,
     threads: int,
@@ -66,7 +66,7 @@ def main(
     ignore_list: str,
     skip_unprocessable: bool,
     cache_directory: str,
-    path: str,
+    paths: List[str],
 ) -> None:
     """STACS - Static Token And Credential Scanner."""
     logging.basicConfig(
@@ -75,9 +75,6 @@ def main(
     )
     logger = logging.getLogger("stacs")
     logger.info(f"STACS running with {threads} threads")
-
-    # Expand the input path.
-    path = os.path.abspath(os.path.expanduser(path))
 
     # Load the rule pack.
     logger.info(f"Attempting to load rule pack from {rule_pack}")
@@ -108,17 +105,23 @@ def main(
         sys.exit(-2)
 
     # Generate a list of candidate files to scan.
-    logger.info(f"Attempting to get a list of files to scan from {path}")
-    try:
-        targets = stacs.scan.loader.filepath.finder(
-            path,
-            cache_directory,
-            skip_on_corrupt=skip_unprocessable,
-            workers=threads,
-        )
-    except stacs.scan.exceptions.STACSException as err:
-        logger.error(f"Unable to generate file list: {err}")
-        sys.exit(-2)
+    targets = []
+
+    for path in paths:
+        path = os.path.abspath(os.path.expanduser(path))
+        logger.info(f"Attempting to get a list of files to scan from {path}")
+        try:
+            targets.extend(
+                stacs.scan.loader.filepath.finder(
+                    path,
+                    cache_directory,
+                    skip_on_corrupt=skip_unprocessable,
+                    workers=threads,
+                )
+            )
+        except stacs.scan.exceptions.STACSException as err:
+            logger.error(f"Unable to generate file list: {err}")
+            sys.exit(-2)
 
     # Submit files for analysis.
     logger.info(f"Found {len(targets)} files for analysis")
