@@ -154,3 +154,11 @@ def main(
     # TODO: Add file output as an option.
     logger.info(f"Found {len(findings)} findings")
     print(sarif)
+
+    # Exit with a status which reflects that unsuppressed findings were encountered if
+    # required.
+    for finding in findings:
+        if not finding.ignore:
+            sys.exit(stacs.scan.constants.EXIT_CODE_FINDING)
+
+    sys.exit(0)
