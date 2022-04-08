@@ -58,7 +58,7 @@ def unlink_error(function: Callable, path: str, exc_info: TracebackType):
     help="The path to use as a cache - used when unpacking archives.",
     default=stacs.scan.constants.CACHE_DIRECTORY,
 )
-@click.argument("path", "paths", nargs=-1)
+@click.argument("paths", nargs=-1, required=True)
 def main(
     debug: bool,
     threads: int,
@@ -159,6 +159,6 @@ def main(
     # required.
     for finding in findings:
         if not finding.ignore:
-            sys.exit(stacs.scan.constants.EXIT_CODE_FINDING)
+            sys.exit(stacs.scan.constants.EXIT_CODE_UNSUPPRESSED)
 
     sys.exit(0)
