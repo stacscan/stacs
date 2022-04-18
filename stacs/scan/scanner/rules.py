@@ -87,22 +87,26 @@ def generate_sample(target: manifest.Entry, offset: int, size: int) -> finding.S
     except OSError as err:
         raise FileAccessException(err)
 
-    if binary:
-        return finding.Sample(
-            window=WINDOW_SIZE,
-            before=base64.b64encode(before),
-            after=base64.b64encode(after),
-            finding=base64.b64encode(entry),
-            binary=binary,
-        )
-    else:
-        return finding.Sample(
-            window=WINDOW_SIZE,
-            before=str(before, "utf-8"),
-            after=str(after, "utf-8"),
-            finding=str(entry, "utf-8"),
-            binary=binary,
-        )
+    if not binary:
+        try:
+            return finding.Sample(
+                window=WINDOW_SIZE,
+                before=str(before, "utf-8"),
+                after=str(after, "utf-8"),
+                finding=str(entry, "utf-8"),
+                binary=binary,
+            )
+        except UnicodeDecodeError:
+            # Fall through and return a base64 encoded sample.
+            pass
+
+    return finding.Sample(
+        window=WINDOW_SIZE,
+        before=base64.b64encode(before),
+        after=base64.b64encode(after),
+        finding=base64.b64encode(entry),
+        binary=binary,
+    )
 
 
 def generate_location(target: manifest.Entry, offset: int) -> finding.Location:
