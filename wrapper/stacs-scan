@@ -6,6 +6,21 @@
 
 SCAN_DIR="/mnt/stacs/input"
 
+# Define additional flags to pass.
+STACS_FLAGS=""
+
+if [ ${STACS_SKIP_UNPROCESSABLE:-0} -ne 0 ]; then
+    STACS_FLAGS="${STACS_FLAGS} --skip-unprocessable"
+fi
+
+if [ ${STACS_THREADS:-10} -ne 10 ]; then
+    STACS_FLAGS="${STACS_FLAGS} --threads ${STACS_THREADS}"
+fi
+
+if [ ${STACS_DEBUG:-0} -ne 0 ]; then
+    STACS_FLAGS="${STACS_FLAGS} --debug"
+fi
+
 # If additional arguments are provided, use them instead of defaults.
 if [ "$#" -gt 0 ]; then
     stacs "$@"
@@ -16,11 +31,13 @@ else
             --rule-pack /mnt/stacs/rules/credential.json \
             --cache-directory /mnt/stacs/cache \
             --ignore-list "${SCAN_DIR}/stacs.ignore.json" \
+            ${STACS_FLAGS} \
             "${SCAN_DIR}/"
     else
         stacs \
             --rule-pack /mnt/stacs/rules/credential.json \
             --cache-directory /mnt/stacs/cache \
+            ${STACS_FLAGS} \
             "${SCAN_DIR}/"
     fi
 fi

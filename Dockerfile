@@ -3,6 +3,11 @@ FROM python:3.9-alpine
 # Allow build-time specification of version.
 ARG VERSION
 
+# Allow runtime tuning.
+ENV STACS_SKIP_UNPROCESSABLE=0
+ENV STACS_THREADS=10
+ENV STACS_DEBUG=0
+
 # Keep things friendly.
 LABEL org.opencontainers.image.title="STACS"
 LABEL org.opencontainers.image.description="Static Token And Credential Scanner"
