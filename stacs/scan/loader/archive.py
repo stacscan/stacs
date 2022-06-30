@@ -14,6 +14,7 @@ import tarfile
 import zipfile
 
 import libarchive
+import zstandard
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
 
@@ -24,7 +25,7 @@ def path_hash(filepath: str) -> str:
 
 
 def zip_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided zip archive."""
     log = logging.getLogger(__name__)
 
     try:
@@ -50,14 +51,19 @@ def zip_handler(filepath: str, directory: str) -> None:
                 log.warn(
                     f"Cannot process file in archive at {filepath}, skipping: {err}"
                 )
-    except zipfile.BadZipFile as err:
+            except (OSError, IndexError) as err:
+                # Several conditions, but usually a corrupt / bad input zip.
+                log.warn(
+                    f"Cannot process file in archive at {filepath}, skipping: {err}"
+                )
+    except (zipfile.BadZipFile, OSError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
 
 
 def tar_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided tarball."""
     try:
         os.mkdir(directory, mode=0o700)
     except OSError as err:
@@ -69,14 +75,14 @@ def tar_handler(filepath: str, directory: str) -> None:
     try:
         with tarfile.open(filepath, "r") as archive:
             archive.extractall(directory)
-    except tarfile.TarError as err:
+    except (PermissionError, tarfile.TarError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
 
 
 def gzip_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided gzip archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
     # Ensure that files with a proceeding dot are properly handled.
@@ -105,7 +111,7 @@ def gzip_handler(filepath: str, directory: str) -> None:
 
 
 def bzip2_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided bzip2 archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
     # Like gzip, bzip2 cannot support more than a single file. Again, we'll spool into
@@ -123,14 +129,41 @@ def bzip2_handler(filepath: str, directory: str) -> None:
         with bz2.open(filepath, "rb") as fin:
             with open(os.path.join(directory, output), "wb") as fout:
                 shutil.copyfileobj(fin, fout, CHUNK_SIZE)
-    except ValueError as err:
+    except (OSError, ValueError) as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {output}: {err}"
+        )
+
+
+def zstd_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided zstd archive."""
+    output = ".".join(os.path.basename(filepath).split(".")[:-1])
+
+    # Like gzip, zstd cannot support more than a single file. Again, we'll spool into
+    # a subdirectory for consistency.
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    # This will attempt to read the entire file into memory before decompressing. It
+    # does not appear zstd bindings in Python support anything but.
+    try:
+        decompressor = zstandard.ZstdDecompressor()
+
+        with open(filepath, "rb") as fin:
+            with open(os.path.join(directory, output), "wb") as fout:
+                decompressor.copy_stream(fin, fout, read_size=CHUNK_SIZE)
+    except (OSError, zstandard.ZstdError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {output}: {err}"
         )
 
 
 def lzma_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided xz / lzma archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
     # Ensure that files with a proceeding dot are properly handled.
@@ -289,5 +322,47 @@ MIME_TYPE_HANDLERS = {
             bytearray([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C]),
         ],
         "handler": libarchive_handler,
+    },
+    "application/x-cpio": {
+        "offset": 0,
+        "magic": [
+            bytearray([0xC7, 0x71]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-xar": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x78, 0x61, 0x72, 0x21]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/vnd.ms-cab-compressed": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x4D, 0x53, 0x43, 0x46]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-archive": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/vnd.rar": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x52, 0x61, 0x72, 0x21, 0x1A, 0x07]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/zstd": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x28, 0xB5, 0x2F, 0xFD]),
+        ],
+        "handler": zstd_handler,
     },
 }

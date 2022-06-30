@@ -14,3 +14,5 @@ typing-extensions==4.1.1
     # via pydantic
 yara-python==4.2.0
     # via -r requirements.in
+zstandard==0.18.0
+    # via -r requirements.in
