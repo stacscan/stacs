@@ -16,6 +16,16 @@ const char *ArchiveError::what() const noexcept {
 }
 
 ArchiveReader::ArchiveReader(const std::string &filename) : filename(filename) {
+}
+
+ArchiveReader::~ArchiveReader() {
+}
+
+std::string ArchiveReader::getFilename() {
+    return this->filename;
+}
+
+ArchiveReader *ArchiveReader::enter() {
     this->archive = archive_read_new();
 
     // Enable all libarchive supported filters and formats.
@@ -23,16 +33,22 @@ ArchiveReader::ArchiveReader(const std::string &filename) : filename(filename) {
     archive_read_support_format_all(this->archive);
 
     // Attempt to open the archive.
-    int result = archive_read_open_filename(this->archive, filename.c_str(), 10240);
+    int result = archive_read_open_filename(this->archive,
+                                            this->filename.c_str(),
+                                            10240);
 
     if (result != ARCHIVE_OK) {
+        pybind11::print(archive_error_string(this->archive));
         throw ArchiveError();
     }
+
+    return this;
 }
 
-ArchiveReader::~ArchiveReader() {
-}
+bool ArchiveReader::exit(pybind11::object exc_type,
+                         pybind11::object exc_value,
+                         pybind11::object exc_traceback) {
+    archive_read_free(this->archive);
 
-const std::string &ArchiveReader::getFilename() {
-    return filename;
+    return true;
 }

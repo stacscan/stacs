@@ -5,19 +5,26 @@
  */
 
 #pragma once
+#include <pybind11/pybind11.h>
 
+#include <iostream>
 #include <string>
 
 class ArchiveReader {
-   private:
-    std::string filename;
-    struct archive *archive;
-
    public:
     ArchiveReader(const std::string &filename);
     ~ArchiveReader();
 
-    const std::string &getFilename();
+    ArchiveReader *enter();
+    bool exit(pybind11::object exc_type,
+              pybind11::object exc_value,
+              pybind11::object exc_traceback);
+
+    std::string getFilename();
+
+   private:
+    std::string filename;
+    struct archive *archive;
 };
 
 struct ArchiveError : std::exception {

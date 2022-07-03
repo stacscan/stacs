@@ -16,6 +16,9 @@ PYBIND11_MODULE(archive, module) {
 
     py::class_<ArchiveReader>(module, "ArchiveReader")
         .def(py::init<const std::string &>())
+        .def_property_readonly("filename", &ArchiveReader::getFilename)
+        .def("__enter__", &ArchiveReader::enter)
+        .def("__exit__", &ArchiveReader::exit)
         .doc() = "An interface to read archive contents (via libarchive)";
 
     py::register_exception<ArchiveError>(module, "ArchiveError");
