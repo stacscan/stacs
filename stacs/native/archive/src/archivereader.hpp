@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 
+class ArchiveEntry;
+
 class ArchiveReader {
    public:
     ArchiveReader(const std::string &filename);
@@ -20,11 +22,15 @@ class ArchiveReader {
               pybind11::object exc_value,
               pybind11::object exc_traceback);
 
+    ArchiveEntry next();
+    ArchiveReader *iter();
+
     std::string getFilename();
 
    private:
     std::string filename;
     struct archive *archive;
+    struct archive_entry *entry;
 };
 
 struct ArchiveError : std::exception {

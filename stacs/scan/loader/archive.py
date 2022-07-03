@@ -13,8 +13,7 @@ import shutil
 import tarfile
 import zipfile
 
-import libarchive
-import zstandard
+from stacs.native import archive
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
 
@@ -37,9 +36,9 @@ def zip_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the zipfile to the new unpack directory.
     try:
-        with zipfile.ZipFile(filepath, "r") as archive:
+        with zipfile.ZipFile(filepath, "r") as reader:
             try:
-                archive.extractall(directory)
+                reader.extractall(directory)
             except RuntimeError as err:
                 # Encrypted zips (why is this not a custom exception?!)
                 if "encrypted" in str(err):
@@ -73,8 +72,8 @@ def tar_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the tarball to the new unpack directory.
     try:
-        with tarfile.open(filepath, "r") as archive:
-            archive.extractall(directory)
+        with tarfile.open(filepath, "r") as reader:
+            reader.extractall(directory)
     except (PermissionError, tarfile.TarError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
@@ -135,33 +134,6 @@ def bzip2_handler(filepath: str, directory: str) -> None:
         )
 
 
-def zstd_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided zstd archive."""
-    output = ".".join(os.path.basename(filepath).split(".")[:-1])
-
-    # Like gzip, zstd cannot support more than a single file. Again, we'll spool into
-    # a subdirectory for consistency.
-    try:
-        os.mkdir(directory, mode=0o700)
-    except OSError as err:
-        raise FileAccessException(
-            f"Unable to create unpack directory at {directory}: {err}"
-        )
-
-    # This will attempt to read the entire file into memory before decompressing. It
-    # does not appear zstd bindings in Python support anything but.
-    try:
-        decompressor = zstandard.ZstdDecompressor()
-
-        with open(filepath, "rb") as fin:
-            with open(os.path.join(directory, output), "wb") as fout:
-                decompressor.copy_stream(fin, fout, read_size=CHUNK_SIZE)
-    except (OSError, zstandard.ZstdError) as err:
-        raise InvalidFileException(
-            f"Unable to extract archive {filepath} to {output}: {err}"
-        )
-
-
 def lzma_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided xz / lzma archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
@@ -200,9 +172,9 @@ def libarchive_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the archive to the new unpack directory.
     try:
-        with libarchive.Archive(filepath) as fin:
-            for entry in fin:
-                member = entry.pathname
+        with archive.ArchiveReader(filepath) as reader:
+            for entry in reader:
+                member = entry.filename
                 member = member.lstrip("../")
                 member = member.lstrip("./")
 
@@ -222,20 +194,21 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                     os.makedirs(parent)
 
                 # If the entry is a directory, create it and move on.
-                if entry.isdir():
+                if reader.isdir:
                     os.makedirs(destination)
                     continue
 
                 with open(destination, "wb") as f:
                     try:
-                        for block in fin.readstream(entry.size):
-                            f.write(block)
+                        pass
+                        # for block in fin.readstream(entry.size):
+                        #     f.write(block)
                     except Exception as err:
                         # python-libarchive unfortunately raises Exception on errors,
                         # so we have a rather generic handler here, so we'll remap it to
                         # something a bit more handleable.
                         raise ValueError(err)
-    except ValueError as err:
+    except archive.ArchiveError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
@@ -363,6 +336,6 @@ MIME_TYPE_HANDLERS = {
         "magic": [
             bytearray([0x28, 0xB5, 0x2F, 0xFD]),
         ],
-        "handler": zstd_handler,
+        "handler": libarchive_handler,
     },
 }

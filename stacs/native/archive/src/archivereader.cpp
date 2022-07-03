@@ -6,6 +6,8 @@
 
 #include "archivereader.hpp"
 
+#include "archiveentry.hpp"
+
 extern "C" {
 #include <archive.h>
 #include <archive_entry.h>
@@ -21,10 +23,42 @@ ArchiveReader::ArchiveReader(const std::string &filename) : filename(filename) {
 ArchiveReader::~ArchiveReader() {
 }
 
+ArchiveReader *ArchiveReader::iter() {
+    return this;
+}
+
+/**
+ * Gets the filename of the currently open file.
+ *
+ * @return std::string
+ */
 std::string ArchiveReader::getFilename() {
     return this->filename;
 }
 
+/**
+ * Find and return the next member in the archive.
+ *
+ * @return ArchiveEntry
+ */
+ArchiveEntry ArchiveReader::next() {
+    int result = archive_read_next_header(this->archive, &this->entry);
+
+    if (result == ARCHIVE_OK) {
+        return ArchiveEntry(this->entry);
+    }
+    if (result == ARCHIVE_EOF) {
+        throw pybind11::stop_iteration();
+    }
+
+    throw ArchiveError();
+}
+
+/**
+ * Loads an archive on Python Context Manager enter.
+ *
+ * @return ArchiveReader*
+ */
 ArchiveReader *ArchiveReader::enter() {
     this->archive = archive_read_new();
 
@@ -45,10 +79,19 @@ ArchiveReader *ArchiveReader::enter() {
     return this;
 }
 
+/**
+ * Cleans up the open archive on Python Context Manager exit.
+ *
+ * @return true
+ */
 bool ArchiveReader::exit(pybind11::object exc_type,
                          pybind11::object exc_value,
                          pybind11::object exc_traceback) {
-    archive_read_free(this->archive);
+    int result = archive_read_free(this->archive);
 
-    return true;
+    if (result == ARCHIVE_OK) {
+        return true;
+    }
+
+    return false;
 }
