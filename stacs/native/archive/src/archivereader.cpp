@@ -37,6 +37,33 @@ std::string ArchiveReader::getFilename() {
 }
 
 /**
+ * Reads the currently selected archive member into a buffer, returning the
+ * number of bytes read. 0 will be returned when no more data is available.
+ *
+ * @return int
+ */
+int ArchiveReader::read() {
+    int result = archive_read_data(this->archive,
+                                   this->chunk,
+                                   sizeof(this->chunk));
+
+    if (result < 0) {
+        throw ArchiveError();
+    }
+
+    return result;
+}
+
+/**
+ * Return the current contents of the decompression buffer.
+ *
+ * @return pybind11::bytes
+ */
+pybind11::bytes ArchiveReader::getChunk() {
+    return pybind11::bytes(this->chunk);
+}
+
+/**
  * Find and return the next member in the archive.
  *
  * @return ArchiveEntry
@@ -72,7 +99,6 @@ ArchiveReader *ArchiveReader::enter() {
                                             10240);
 
     if (result != ARCHIVE_OK) {
-        pybind11::print(archive_error_string(this->archive));
         throw ArchiveError();
     }
 

@@ -58,6 +58,5 @@ setup(
         "click==8.1.3",
         "yara-python==4.2.0",
         "pydantic==1.9.1",
-        "python-libarchive==4.0.1.post1",
     ],
 )

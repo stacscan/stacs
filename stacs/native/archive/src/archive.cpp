@@ -18,10 +18,12 @@ PYBIND11_MODULE(archive, module) {
     py::class_<ArchiveReader>(module, "ArchiveReader")
         .def(py::init<const std::string &>())
         .def_property_readonly("filename", &ArchiveReader::getFilename)
+        .def_property_readonly("chunk", &ArchiveReader::getChunk)
         .def("__enter__", &ArchiveReader::enter)
         .def("__exit__", &ArchiveReader::exit)
         .def("__iter__", &ArchiveReader::iter)
         .def("__next__", &ArchiveReader::next)
+        .def("read", &ArchiveReader::read)
         .doc() = "An interface to read archive contents (via libarchive)";
 
     py::class_<ArchiveEntry>(module, "ArchiveEntry")

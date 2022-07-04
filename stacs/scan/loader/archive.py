@@ -11,6 +11,7 @@ import lzma
 import os
 import shutil
 import tarfile
+import time
 import zipfile
 
 from stacs.native import archive
@@ -178,6 +179,9 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                 member = member.lstrip("../")
                 member = member.lstrip("./")
 
+                if entry.filename == ".":
+                    continue
+
                 destination = os.path.join(directory, member)
                 parent = os.path.dirname(destination)
 
@@ -194,20 +198,14 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                     os.makedirs(parent)
 
                 # If the entry is a directory, create it and move on.
-                if reader.isdir:
+                if entry.isdir:
                     os.makedirs(destination)
                     continue
 
-                with open(destination, "wb") as f:
-                    try:
-                        pass
-                        # for block in fin.readstream(entry.size):
-                        #     f.write(block)
-                    except Exception as err:
-                        # python-libarchive unfortunately raises Exception on errors,
-                        # so we have a rather generic handler here, so we'll remap it to
-                        # something a bit more handleable.
-                        raise ValueError(err)
+                with open(destination, "wb") as fout:
+                    while reader.read() > 0:
+                        fout.write(reader.chunk)
+
     except archive.ArchiveError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"

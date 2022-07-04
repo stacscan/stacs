@@ -22,12 +22,14 @@ class ArchiveReader {
               pybind11::object exc_value,
               pybind11::object exc_traceback);
 
+    int read();
     ArchiveEntry next();
     ArchiveReader *iter();
-
     std::string getFilename();
+    pybind11::bytes getChunk();
 
    private:
+    char chunk[10240];
     std::string filename;
     struct archive *archive;
     struct archive_entry *entry;
