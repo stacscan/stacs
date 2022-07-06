@@ -45,7 +45,7 @@ jobs:
         env:
           CIBW_BEFORE_BUILD: pip install pybind11
           CIBW_ENVIRONMENT: >
-            CPPFLAGS="-I$(find `brew --cellar libarchive` -name include -type d)" \
+            CPPFLAGS="-std=c++11 -I$(find `brew --cellar libarchive` -name include -type d)" \
             LDFLAGS="-L$(find `brew --cellar libarchive` -name include -type d)" \
             PKG_CONFIG="$(find `brew --cellar libarchive` -name pkgconfig -type d)"
 
