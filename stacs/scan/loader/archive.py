@@ -205,7 +205,6 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                 with open(destination, "wb") as fout:
                     while reader.read() > 0:
                         fout.write(reader.chunk)
-
     except archive.ArchiveError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"

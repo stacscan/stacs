@@ -23,26 +23,11 @@ jobs:
       - name: Configure Python
         uses: actions/setup-python@v3
 
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.7.0
-
+      # TODO: This may result in macOS compiling against a newer version of libarchive
+      # than Linux.
       - name: Install dependencies (macOS)
         if: ${{ startsWith(matrix.os, "macos-") }}
         run: brew install libarchive
-
-      - name: Install dependencies (Ubuntu)
-        if: ${{ startsWith(matrix.os, "ubuntu-") }}
-        run: |
-          curl -sOL https://github.com/libarchive/libarchive/releases/download/v3.6.1/libarchive-3.6.1.tar.gz
-          tar -zxvf libarchive-3.6.1.tar.gz
-          cd libarchive-3.6.1/
-          ./configure --without-lzo2 \
-            --without-nettle \
-            --without-xml2 \
-            --without-openssl \
-            --with-expat
-          make
-          sudo make install
 
       # This is rather unpleasant and the package versioning should be adjusted to
       # allow snapshot build numbers to be injected via setuptools, etc.
@@ -66,6 +51,15 @@ jobs:
       - name: Build wheels (Ubuntu)
         run: python -m cibuildwheel --output-dir wheelhouse
         if: ${{ startsWith(matrix.os, "ubuntu-") }}
+        env:
+          CIBW_BEFORE_ALL_LINUX: >
+            python -m pip install pybind11 && \
+            curl -sOL https://github.com/libarchive/libarchive/releases/download/v3.6.1/libarchive-3.6.1.tar.gz && \
+            tar -zxvf libarchive-3.6.1.tar.gz && \
+            cd libarchive-3.6.1/ && \
+            ./configure --without-lzo2 --without-nettle --without-xml2 --without-openssl --with-expat && \
+            make && \
+            make install
 
       - uses: actions/upload-artifact@v3
         with:
