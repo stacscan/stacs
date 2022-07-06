@@ -53,12 +53,12 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu-')
         env:
           CIBW_BEFORE_ALL_LINUX: >
-            python -m pip install pybind11 && \
-            curl -sOL https://github.com/libarchive/libarchive/releases/download/v3.6.1/libarchive-3.6.1.tar.gz && \
-            tar -zxvf libarchive-3.6.1.tar.gz && \
-            cd libarchive-3.6.1/ && \
-            ./configure --without-lzo2 --without-nettle --without-xml2 --without-openssl --with-expat && \
-            make && \
+            python -m pip install pybind11 && 
+            curl -sOL https://github.com/libarchive/libarchive/releases/download/v3.6.1/libarchive-3.6.1.tar.gz && 
+            tar -zxvf libarchive-3.6.1.tar.gz && 
+            cd libarchive-3.6.1/ && 
+            ./configure --without-lzo2 --without-nettle --without-xml2 --without-openssl --with-expat && 
+            make && 
             make install
 
       - uses: actions/upload-artifact@v3
