@@ -33,7 +33,7 @@ jobs:
       # allow snapshot build numbers to be injected via setuptools, etc.
       - name: Set development version suffix
         run: |
-          sed -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
+          sed -E -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
             stacs/scan/__about__.py
 
       - name: Install cibuildwheel
@@ -79,7 +79,7 @@ jobs:
       # allow snapshot build numbers to be injected via setuptools, etc.
       - name: Set development version suffix
         run: |
-          sed -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
+          sed -E -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
             stacs/scan/__about__.py
 
       - name: Build Python sdist
