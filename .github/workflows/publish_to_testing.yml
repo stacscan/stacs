@@ -43,6 +43,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         if: startsWith(matrix.os, 'macos-')
         env:
+          CIBW_BEFORE_ALL_MACOS: python -m pip install pybind11
           CIBW_ENVIRONMENT: >
             CPPFLAGS="-I$(find `brew --cellar libarchive` -name include -type d)" \
             LDFLAGS="-L$(find `brew --cellar libarchive` -name include -type d)" \
