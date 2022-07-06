@@ -11,7 +11,6 @@ import lzma
 import os
 import shutil
 import tarfile
-import time
 import zipfile
 
 from stacs.native import archive
