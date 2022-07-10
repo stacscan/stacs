@@ -58,5 +58,6 @@ setup(
         "click==8.1.3",
         "yara-python==4.2.0",
         "pydantic==1.9.1",
+        "colorama==0.4.5",
     ],
 )

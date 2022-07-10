@@ -16,6 +16,7 @@ import zipfile
 from stacs.native import archive
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
+from stacs.scan.loader.format import xar
 
 
 def path_hash(filepath: str) -> str:
@@ -158,6 +159,29 @@ def lzma_handler(filepath: str, directory: str) -> None:
     except lzma.LZMAError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {output}: {err}"
+        )
+
+
+def xar_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided XAR archive."""
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    # Attempt to unpack the archive.
+    try:
+        archive = xar.XAR(filepath)
+        archive.extract(directory)
+    except FileAccessException as err:
+        raise FileAccessException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
+        )
+    except InvalidFileException as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
         )
 
 
@@ -304,7 +328,7 @@ MIME_TYPE_HANDLERS = {
         "magic": [
             bytearray([0x78, 0x61, 0x72, 0x21]),
         ],
-        "handler": libarchive_handler,
+        "handler": xar_handler,
     },
     "application/vnd.ms-cab-compressed": {
         "offset": 0,

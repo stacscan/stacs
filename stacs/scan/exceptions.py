@@ -26,3 +26,7 @@ class IgnoreListException(STACSException):
 
 class NotImplementedException(STACSException):
     """Indicates that the requested method has not been implemented."""
+
+
+class NoParentException(STACSException):
+    """Indicates that a finding does not have a parent."""
