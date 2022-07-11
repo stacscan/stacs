@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 
+const int CHUNK_SIZE = 10240;
+
 class ArchiveEntry;
 
 class ArchiveReader {
@@ -29,7 +31,7 @@ class ArchiveReader {
     pybind11::bytes getChunk();
 
    private:
-    char chunk[10240];
+    std::vector<char> chunk;
     std::string filename;
     struct archive *archive;
     struct archive_entry *entry;

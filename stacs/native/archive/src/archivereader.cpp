@@ -18,6 +18,7 @@ const char *ArchiveError::what() const noexcept {
 }
 
 ArchiveReader::ArchiveReader(const std::string &filename) : filename(filename) {
+    this->chunk.resize(CHUNK_SIZE);
 }
 
 ArchiveReader::~ArchiveReader() {
@@ -44,8 +45,8 @@ std::string ArchiveReader::getFilename() {
  */
 int ArchiveReader::read() {
     int result = archive_read_data(this->archive,
-                                   this->chunk,
-                                   sizeof(this->chunk));
+                                   this->chunk.data(),
+                                   this->chunk.size());
 
     if (result < 0) {
         throw ArchiveError();
@@ -60,7 +61,7 @@ int ArchiveReader::read() {
  * @return pybind11::bytes
  */
 pybind11::bytes ArchiveReader::getChunk() {
-    return pybind11::bytes(this->chunk);
+    return pybind11::bytes(this->chunk.data(), this->chunk.size());
 }
 
 /**

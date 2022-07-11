@@ -46,6 +46,7 @@ def banner(version: str) -> str:
    \__ \ / / / /| |/ /    \__ \
   ___/ // / / ___ / /___ ___/ /
  /____//_/ /_/  |_\____//____/
+
        STACS version {version}
     """
     return banner
