@@ -222,7 +222,7 @@ def libarchive_handler(filepath: str, directory: str) -> None:
 
                 # If the entry is a directory, create it and move on.
                 if entry.isdir:
-                    os.makedirs(destination)
+                    os.makedirs(destination, exist_ok=True)
                     continue
 
                 with open(destination, "wb") as fout:
