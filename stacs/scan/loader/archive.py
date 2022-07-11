@@ -319,7 +319,11 @@ MIME_TYPE_HANDLERS = {
     "application/x-cpio": {
         "offset": 0,
         "magic": [
-            bytearray([0xC7, 0x71]),
+            bytearray([0xC7, 0x71]),  # 070707 in octal (Little Endian).
+            bytearray([0x71, 0xC7]),  # 070707 in octal (Big Endian).
+            bytearray([0x30, 0x37, 0x30, 0x37, 0x30, 0x31]),  # "070701"
+            bytearray([0x30, 0x37, 0x30, 0x37, 0x30, 0x32]),  # "070702"
+            bytearray([0x30, 0x37, 0x30, 0x37, 0x30, 0x37]),  # "070707"
         ],
         "handler": libarchive_handler,
     },
