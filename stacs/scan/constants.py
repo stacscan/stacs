@@ -18,3 +18,13 @@ ARCHIVE_FILE_SEPARATOR = "!"
 
 # Define an exit code to use when there are unsuppressed findings.
 EXIT_CODE_UNSUPPRESSED = 100
+
+# External licenses will be displayed during STACS banner.
+EXTERNAL_LICENSES = {
+    "libarchive": [
+        "https://github.com/libarchive/libarchive/blob/master/COPYING",
+    ],
+    "yara": [
+        "https://github.com/VirusTotal/yara-python/blob/master/LICENSE",
+    ],
+}

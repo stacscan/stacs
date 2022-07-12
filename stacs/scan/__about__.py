@@ -9,11 +9,3 @@ __version__ = "0.4.7"
 __author__ = "Peter Adkins"
 __uri__ = "https://www.github.com/stacscan/stacs/"
 __license__ = "BSD-3-Clause"
-
-
-# External licenses will be displayed during STACS banner.
-EXTERNAL_LICENSES = {
-    "libarchive": [
-        "https://github.com/libarchive/libarchive/blob/master/COPYING",
-    ],
-}

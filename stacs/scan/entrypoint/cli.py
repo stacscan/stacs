@@ -83,10 +83,8 @@ def main(
     logger.info(f"STACS running with {threads} threads")
 
     # Licenses.
-    for project, urls in stacs.scan.__about__.EXTERNAL_LICENSES.items():
-        logger.info(
-            f"STACS utilises {project} (licenses may be found at {' '.join(urls)})"
-        )
+    for project, urls in stacs.scan.constants.EXTERNAL_LICENSES.items():
+        logger.info(f"STACS uses {project} (licenses may be found at {' '.join(urls)})")
 
     # Load the rule pack.
     logger.info(f"Attempting to load rule pack from {rule_pack}")
