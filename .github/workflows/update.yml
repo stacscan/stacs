@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: refs/tags/${{ github.event.inputs.release }}
 
       - name: Configure Python
         uses: actions/setup-python@v2
