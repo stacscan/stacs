@@ -18,10 +18,10 @@ LABEL org.opencontainers.image.version=$VERSION
 # Install STACS into the container.
 WORKDIR /opt/stacs
 COPY requirements.txt setup.py setup.cfg ./
-COPY stacs ./stacs
 COPY wrapper/stacs-scan /usr/bin
 
-RUN apk add --no-cache git zstd && pip install --no-cache-dir .
+RUN apk add --no-cache git gcc musl-dev zstd && \
+    pip install --no-cache-dir stacs==$VERSION
 
 # Clone the latest STACS rules into the rules directory to enable out of the box use.
 # This can be mounted over using a volume mount to allow more specific rules to be
@@ -38,7 +38,7 @@ VOLUME /mnt/stacs/ignore
 VOLUME /mnt/stacs/cache
 
 # Clean up.
-RUN apk del --purge git
+RUN apk del --purge git musl-dev gcc
 
 # Default to running stacs with the volume mounts.
 ENTRYPOINT ["stacs-scan"]
