@@ -21,6 +21,10 @@ if [ ${STACS_DEBUG:-0} -ne 0 ]; then
     STACS_FLAGS="${STACS_FLAGS} --debug"
 fi
 
+if [ ${STACS_OUTPUT_PRETTY:-0} -ne 0 ]; then
+    STACS_FLAGS="${STACS_FLAGS} --pretty"
+fi
+
 # If additional arguments are provided, use them instead of defaults.
 if [ "$#" -gt 0 ]; then
     stacs "$@"

@@ -147,3 +147,9 @@ stacs-rules/
 
 # macOS files.
 .DS_Store
+
+# Wheel build.
+wheelhouse/
+
+# Ignore compiled shared objects.
+*.so

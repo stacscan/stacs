@@ -8,34 +8,99 @@ on:
         required: true
 
 jobs:
-  update:
-    runs-on: ubuntu-latest
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-18.04, macos-10.15, macos-11, macos-12]
+
     steps:
       - uses: actions/checkout@v2
         with:
           ref: ${{ github.event.inputs.release }}
 
       - name: Configure Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
+        uses: actions/setup-python@v3
 
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y libarchive13 libarchive-dev
+      # TODO: This may result in macOS compiling against a newer version of libarchive
+      # than Linux.
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.os, 'macos-')
+        run: brew install libarchive
 
       # This is rather unpleasant and the package versioning should be adjusted to
       # allow snapshot build numbers to be injected via setuptools, etc.
       - name: Set development version suffix
         run: |
-          sed -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
+          sed -E -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
             stacs/scan/__about__.py
 
-      - name: Build Python package
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.7.0
+
+      - name: Build wheels (macOS)
+        run: python -m cibuildwheel --output-dir wheelhouse
+        if: startsWith(matrix.os, 'macos-')
+        env:
+          CIBW_BEFORE_BUILD: pip install pybind11
+          CIBW_ENVIRONMENT: >
+            CPPFLAGS="-std=c++11 -I$(find `brew --cellar libarchive` -name include -type d)" \
+            LDFLAGS="-L$(find `brew --cellar libarchive` -name include -type d)" \
+            PKG_CONFIG="$(find `brew --cellar libarchive` -name pkgconfig -type d)"
+
+      - name: Build wheels (Ubuntu)
+        run: python -m cibuildwheel --output-dir wheelhouse
+        if: startsWith(matrix.os, 'ubuntu-')
+        env:
+          CIBW_BEFORE_BUILD: pip install pybind11
+          CIBW_BEFORE_ALL_LINUX: >
+            curl -sOL https://github.com/libarchive/libarchive/releases/download/v3.6.1/libarchive-3.6.1.tar.gz && 
+            tar -zxvf libarchive-3.6.1.tar.gz && 
+            cd libarchive-3.6.1/ && 
+            ./configure --without-lzo2 --without-nettle --without-xml2 --without-openssl --with-expat && 
+            make && 
+            make install
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      # This is rather unpleasant and the package versioning should be adjusted to
+      # allow snapshot build numbers to be injected via setuptools, etc.
+      - name: Set development version suffix
         run: |
-          python -m pip install --upgrade pip wheel setuptools build
+          sed -E -i -r 's/^__version__(.*)?"$/__version__\1-dev.${{ github.run_number }}"/' \
+            stacs/scan/__about__.py
+
+      - name: Build Python sdist
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          pip install build
           python -m build --sdist --outdir dist/ .
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
+
+  publish:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
 
       - name: Publish Python package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29

@@ -21,10 +21,14 @@ and ignore lists, and SARIF reporting.
 
 ### What does STACS support?
 
-Currently, STACS supports recursive unpacking of tarballs, gzips, bzips, zips, 7z, iso,
-rpm and xz files. As STACS works on detected file types, rather than the filename,
-propriatary file formats based on these types are automatically supported (such as
-Docker images, Android APKs, and Java JAR fles).
+Currently, STACS supports recursive unpacking of:
+
+* 7z, bz2, cab, cpio, gz, iso, rar, rpm, tar, xar, xz, zip
+
+As STACS works on detected file types, propriatary file formats based and other
+file-types which use these formats are automatically supported. This includes Docker
+images, Android APKs, Java JAR files, RPMs, Debian packages (`.deb`), macOS packages
+(`.pkg`), and more!
 
 ### Who should use STACS?
 
@@ -91,7 +95,18 @@ run (Docker must be installed).
 ```
 docker run \
     --rm \
-    --mount type=bind,source=$(pwd),target=/mnt/stacs/input \
+    -v "$(pwd):/mnt/stacs/input:ro" \
+    stacscan/stacs:latest
+```
+
+If you would like to receive "pretty" readable output, the following command should be
+used:
+
+```
+docker run \
+    --rm \
+    -e STACS_OUTPUT_PRETTY=1 \
+    -v "$(pwd):/mnt/stacs/input:ro" \
     stacscan/stacs:latest
 ```
 
@@ -145,9 +160,15 @@ ignore in the output for tracking.
 
 #### How do I view the results?
 
-Currently, the only output format is SARIF v2.1.0. There are a number of viewers
-available which make this data easier to read, such as [this great web based viewer from](https://microsoft.github.io/sarif-web-component/) Microsoft. An example of the findings from a Docker container
-image has been included below:
+If using "pretty" output (`--pretty` / `STACS_OUTPUT_PRETTY`), results will be printed
+in a human readable format to the console.
+
+![Human Output](https://raw.githubusercontent.com/stacscan/stacs/main/docs/images/Human-Output-Example.png)
+
+If using SARIF, there are a number of viewers available which make this data easier to
+read, such as [this great web based viewer from](https://microsoft.github.io/sarif-web-component/)
+Microsoft. An example of the findings from a Docker container image has been included
+below:
 
 ![Microsoft SARIF Viewer Output](https://raw.githubusercontent.com/stacscan/stacs/main/docs/images/SARIF-Viewer-Example.png)
 

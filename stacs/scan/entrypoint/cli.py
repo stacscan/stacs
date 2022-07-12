@@ -35,6 +35,11 @@ def unlink_error(function: Callable, path: str, exc_info: TracebackType):
     help="Increase verbosity of logs for debugging",
 )
 @click.option(
+    "--pretty",
+    help="Display outputs in a human-readable tree, rather than SARIF.",
+    is_flag=True,
+)
+@click.option(
     "--threads",
     help="The number of threads to use when processing files",
     default=10,
@@ -61,6 +66,7 @@ def unlink_error(function: Callable, path: str, exc_info: TracebackType):
 @click.argument("paths", nargs=-1, required=True)
 def main(
     debug: bool,
+    pretty: bool,
     threads: int,
     rule_pack: str,
     ignore_list: str,
@@ -75,6 +81,10 @@ def main(
     )
     logger = logging.getLogger("stacs")
     logger.info(f"STACS running with {threads} threads")
+
+    # Licenses.
+    for project, urls in stacs.scan.constants.EXTERNAL_LICENSES.items():
+        logger.info(f"STACS uses {project} (licenses may be found at {' '.join(urls)})")
 
     # Load the rule pack.
     logger.info(f"Attempting to load rule pack from {rule_pack}")
@@ -140,7 +150,24 @@ def main(
     if ignored:
         findings = stacs.scan.filter.ignore_list.process(findings, ignored)
 
-    # Generate SARIF and output to STDOUT.
+    # Clean-up cache directory.
+    shutil.rmtree(cache_directory, onerror=unlink_error)
+
+    # Determine the correct exit status based on whether there were unsuppressed
+    # findings.
+    exit_code = 0
+
+    for finding in findings:
+        if not finding.ignore:
+            exit_code = stacs.scan.constants.EXIT_CODE_UNSUPPRESSED
+
+    # Pretty print, if requested.
+    if pretty:
+        logger.info("Generating 'pretty' output from findings")
+        stacs.scan.output.pretty.render(findings, pack)
+        sys.exit(exit_code)
+
+    # Default to SARIF output to STDOUT.
     logger.info("Generating SARIF from findings")
     try:
         sarif = stacs.scan.output.sarif.render(path, findings, pack)
@@ -148,17 +175,6 @@ def main(
         logger.error(f"Unable to generate SARIF: {err}")
         sys.exit(-3)
 
-    # Clean-up cache directory.
-    shutil.rmtree(cache_directory, onerror=unlink_error)
-
     # TODO: Add file output as an option.
     logger.info(f"Found {len(findings)} findings")
     print(sarif)
-
-    # Exit with a status which reflects that unsuppressed findings were encountered if
-    # required.
-    for finding in findings:
-        if not finding.ignore:
-            sys.exit(stacs.scan.constants.EXIT_CODE_UNSUPPRESSED)
-
-    sys.exit(0)

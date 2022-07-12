@@ -13,9 +13,10 @@ import shutil
 import tarfile
 import zipfile
 
-import libarchive
+from stacs.native import archive
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
+from stacs.scan.loader.format import xar
 
 
 def path_hash(filepath: str) -> str:
@@ -24,7 +25,7 @@ def path_hash(filepath: str) -> str:
 
 
 def zip_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided zip archive."""
     log = logging.getLogger(__name__)
 
     try:
@@ -36,9 +37,9 @@ def zip_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the zipfile to the new unpack directory.
     try:
-        with zipfile.ZipFile(filepath, "r") as archive:
+        with zipfile.ZipFile(filepath, "r") as reader:
             try:
-                archive.extractall(directory)
+                reader.extractall(directory)
             except RuntimeError as err:
                 # Encrypted zips (why is this not a custom exception?!)
                 if "encrypted" in str(err):
@@ -50,14 +51,19 @@ def zip_handler(filepath: str, directory: str) -> None:
                 log.warn(
                     f"Cannot process file in archive at {filepath}, skipping: {err}"
                 )
-    except zipfile.BadZipFile as err:
+            except (OSError, IndexError) as err:
+                # Several conditions, but usually a corrupt / bad input zip.
+                log.warn(
+                    f"Cannot process file in archive at {filepath}, skipping: {err}"
+                )
+    except (zipfile.BadZipFile, OSError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
 
 
 def tar_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided tarball."""
     try:
         os.mkdir(directory, mode=0o700)
     except OSError as err:
@@ -67,16 +73,16 @@ def tar_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the tarball to the new unpack directory.
     try:
-        with tarfile.open(filepath, "r") as archive:
-            archive.extractall(directory)
-    except tarfile.TarError as err:
+        with tarfile.open(filepath, "r") as reader:
+            reader.extractall(directory)
+    except (PermissionError, tarfile.TarError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
 
 
 def gzip_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided gzip archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
     # Ensure that files with a proceeding dot are properly handled.
@@ -105,7 +111,7 @@ def gzip_handler(filepath: str, directory: str) -> None:
 
 
 def bzip2_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided bzip2 archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
     # Like gzip, bzip2 cannot support more than a single file. Again, we'll spool into
@@ -123,14 +129,14 @@ def bzip2_handler(filepath: str, directory: str) -> None:
         with bz2.open(filepath, "rb") as fin:
             with open(os.path.join(directory, output), "wb") as fout:
                 shutil.copyfileobj(fin, fout, CHUNK_SIZE)
-    except ValueError as err:
+    except (OSError, ValueError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {output}: {err}"
         )
 
 
 def lzma_handler(filepath: str, directory: str) -> None:
-    """Attempts to extract the provided archive."""
+    """Attempts to extract the provided xz / lzma archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
     # Ensure that files with a proceeding dot are properly handled.
@@ -156,6 +162,29 @@ def lzma_handler(filepath: str, directory: str) -> None:
         )
 
 
+def xar_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided XAR archive."""
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    # Attempt to unpack the archive.
+    try:
+        archive = xar.XAR(filepath)
+        archive.extract(directory)
+    except FileAccessException as err:
+        raise FileAccessException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
+        )
+    except InvalidFileException as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
+        )
+
+
 def libarchive_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided archive with libarchive."""
     try:
@@ -167,11 +196,14 @@ def libarchive_handler(filepath: str, directory: str) -> None:
 
     # Attempt to unpack the archive to the new unpack directory.
     try:
-        with libarchive.Archive(filepath) as fin:
-            for entry in fin:
-                member = entry.pathname
+        with archive.ArchiveReader(filepath) as reader:
+            for entry in reader:
+                member = entry.filename
                 member = member.lstrip("../")
                 member = member.lstrip("./")
+
+                if entry.filename == ".":
+                    continue
 
                 destination = os.path.join(directory, member)
                 parent = os.path.dirname(destination)
@@ -189,20 +221,14 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                     os.makedirs(parent)
 
                 # If the entry is a directory, create it and move on.
-                if entry.isdir():
-                    os.makedirs(destination)
+                if entry.isdir:
+                    os.makedirs(destination, exist_ok=True)
                     continue
 
-                with open(destination, "wb") as f:
-                    try:
-                        for block in fin.readstream(entry.size):
-                            f.write(block)
-                    except Exception as err:
-                        # python-libarchive unfortunately raises Exception on errors,
-                        # so we have a rather generic handler here, so we'll remap it to
-                        # something a bit more handleable.
-                        raise ValueError(err)
-    except ValueError as err:
+                with open(destination, "wb") as fout:
+                    while reader.read() > 0:
+                        fout.write(reader.chunk)
+    except archive.ArchiveError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
         )
@@ -287,6 +313,52 @@ MIME_TYPE_HANDLERS = {
         "offset": 0,
         "magic": [
             bytearray([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-cpio": {
+        "offset": 0,
+        "magic": [
+            bytearray([0xC7, 0x71]),  # 070707 in octal (Little Endian).
+            bytearray([0x71, 0xC7]),  # 070707 in octal (Big Endian).
+            bytearray([0x30, 0x37, 0x30, 0x37, 0x30, 0x31]),  # "070701"
+            bytearray([0x30, 0x37, 0x30, 0x37, 0x30, 0x32]),  # "070702"
+            bytearray([0x30, 0x37, 0x30, 0x37, 0x30, 0x37]),  # "070707"
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-xar": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x78, 0x61, 0x72, 0x21]),
+        ],
+        "handler": xar_handler,
+    },
+    "application/vnd.ms-cab-compressed": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x4D, 0x53, 0x43, 0x46]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/x-archive": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/vnd.rar": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x52, 0x61, 0x72, 0x21, 0x1A, 0x07]),
+        ],
+        "handler": libarchive_handler,
+    },
+    "application/zstd": {
+        "offset": 0,
+        "magic": [
+            bytearray([0x28, 0xB5, 0x2F, 0xFD]),
         ],
         "handler": libarchive_handler,
     },
