@@ -120,3 +120,4 @@ jobs:
           tags: stacscan/stacs:latest,stacscan/stacs:${{ env.IMAGE_VERSION }}
           build-args: |
             VERSION=${{ env.IMAGE_VERSION }}
+            STACS_BUILD=${{ env.STACS_VERSION }}

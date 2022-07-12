@@ -2,6 +2,7 @@ FROM python:3.9-alpine
 
 # Allow build-time specification of version.
 ARG VERSION
+ARG STACS_BUILD
 
 # Allow runtime tuning.
 ENV STACS_SKIP_UNPROCESSABLE=0
@@ -21,7 +22,7 @@ COPY requirements.txt setup.py setup.cfg ./
 COPY wrapper/stacs-scan /usr/bin
 
 RUN apk add --no-cache git gcc musl-dev zstd && \
-    pip install --no-cache-dir stacs==$VERSION
+    pip install --no-cache-dir stacs==$STACS_BUILD
 
 # Clone the latest STACS rules into the rules directory to enable out of the box use.
 # This can be mounted over using a volume mount to allow more specific rules to be
