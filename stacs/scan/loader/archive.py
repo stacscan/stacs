@@ -226,8 +226,12 @@ def libarchive_handler(filepath: str, directory: str) -> None:
                     continue
 
                 with open(destination, "wb") as fout:
-                    while reader.read() > 0:
-                        fout.write(reader.chunk)
+                    while True:
+                        chunk = reader.read()
+                        if len(chunk) > 0:
+                            fout.write(chunk)
+                            continue
+                        break
     except archive.ArchiveError as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {directory}: {err}"
