@@ -19,7 +19,7 @@ from stacs.scan.model.manifest import Entry
 logger = logging.getLogger(__name__)
 
 
-def metadata(filepath: str, overlay: str = None) -> Entry:
+def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
     """Generates a hash and determines the mimetype of the input file."""
     md5 = hashlib.md5()
     mime = None
@@ -41,6 +41,7 @@ def metadata(filepath: str, overlay: str = None) -> Entry:
         md5=md5.hexdigest(),
         mime=mime,
         overlay=overlay,
+        parent=parent,
     )
 
 
@@ -159,7 +160,9 @@ def finder(
                     )
 
                     # Submit back to the pool for processing.
-                    submission = pool.submit(metadata, file, overlay=overlay)
+                    submission = pool.submit(
+                        metadata, file, overlay=overlay, parent=result.md5
+                    )
                     futures[submission] = file
 
             if complete == 0:

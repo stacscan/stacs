@@ -4,6 +4,7 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 from typing import List
+
 from pydantic import BaseModel, Extra, Field
 
 
@@ -24,6 +25,10 @@ class Entry(BaseModel, extra=Extra.forbid):
     md5: str = Field(
         None,
         title="The MD5 sum of the file.",
+    )
+    parent: str = Field(
+        None,
+        title="The MD5 sum of the file's parent.",
     )
     mime: str = Field(
         None,
