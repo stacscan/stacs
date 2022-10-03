@@ -59,5 +59,6 @@ setup(
         "yara-python==4.2.3",
         "pydantic==1.10.2",
         "colorama==0.4.5",
+        "zstandard==0.18.0",
     ],
 )

@@ -13,6 +13,7 @@ import shutil
 import tarfile
 import zipfile
 
+import zstandard
 from stacs.native import archive
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
@@ -130,6 +131,31 @@ def bzip2_handler(filepath: str, directory: str) -> None:
             with open(os.path.join(directory, output), "wb") as fout:
                 shutil.copyfileobj(fin, fout, CHUNK_SIZE)
     except (OSError, ValueError) as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {output}: {err}"
+        )
+
+
+def zstd_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided zstd archive."""
+    output = ".".join(os.path.basename(filepath).split(".")[:-1])
+
+    # zstd does not appear to provide a native mechanism to compress multiple files,
+    # and recommend 'to combine zstd with tar'.
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    try:
+        decompressor = zstandard.ZstdDecompressor()
+
+        with open(filepath, "rb") as fin:
+            with open(os.path.join(directory, output), "wb") as fout:
+                decompressor.copy_stream(fin, fout, read_size=CHUNK_SIZE)
+    except (OSError, ValueError, zstandard.ZstdError) as err:
         raise InvalidFileException(
             f"Unable to extract archive {filepath} to {output}: {err}"
         )
@@ -364,6 +390,6 @@ MIME_TYPE_HANDLERS = {
         "magic": [
             bytearray([0x28, 0xB5, 0x2F, 0xFD]),
         ],
-        "handler": libarchive_handler,
+        "handler": zstd_handler,
     },
 }
