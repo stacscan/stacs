@@ -61,10 +61,7 @@ class XAR:
                 # Rewind and attempt to read in header.
                 fin.seek(0)
                 self._header = XARHeader._make(
-                    struct.unpack(
-                        XAR_HEADER,
-                        fin.read(struct.calcsize(XAR_HEADER)),
-                    )
+                    struct.unpack(XAR_HEADER, fin.read(XAR_HEADER_SZ))
                 )
 
                 # Read and decompress the table-of-contents.
@@ -128,7 +125,7 @@ class XAR:
 
         return candidates
 
-    def extract(self, destination=None):
+    def extract(self, destination):
         """Extract all entries from the XAR to the optional destination directory."""
         # Offset must be adjusted by the size of the ToC and the header. This is as the
         # offset is from the first byte AFTER the header and compressed ToC.

@@ -30,9 +30,11 @@ def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
             while chunk := fin.read(CHUNK_SIZE):
                 md5.update(chunk)
 
-                # Only attempt to determine the filetype on the first chunk.
-                if not mime and fin.tell() <= CHUNK_SIZE:
-                    mime = archive.get_mimetype(chunk)
+                # Attempt to determine the mime-type using the first and last
+                # chunk only. Note: This may need to change further in future.
+                if not mime:
+                    if fin.tell() <= CHUNK_SIZE or len(chunk) < CHUNK_SIZE:
+                        mime = archive.get_mimetype(chunk)
     except OSError as err:
         raise FileAccessException(f"Unable to open file at {filepath}: {err}")
 
