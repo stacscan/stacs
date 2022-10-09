@@ -23,9 +23,9 @@ and ignore lists, and SARIF reporting.
 
 Currently, STACS supports recursive unpacking of:
 
-* 7z, ar, bz2, cab, cpio, gz, iso, rar, rpm, tar, xar, xz, zip
+* 7z, ar, bz2, cab, cpio, gz, iso, rar, rpm, tar, xar, xz, zip, dmg
 
-As STACS works on detected file types, propriatary file formats based and other
+As STACS works on detected file types, proprietary file formats based and other
 file-types which use these formats are automatically supported. This includes Docker
 images, Android APKs, Java JAR files, RPMs, Debian packages (`.deb`), macOS packages
 (`.pkg`), and more!
