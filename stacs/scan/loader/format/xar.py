@@ -61,10 +61,7 @@ class XAR:
                 # Rewind and attempt to read in header.
                 fin.seek(0)
                 self._header = XARHeader._make(
-                    struct.unpack(
-                        XAR_HEADER,
-                        fin.read(struct.calcsize(XAR_HEADER)),
-                    )
+                    struct.unpack(XAR_HEADER, fin.read(XAR_HEADER_SZ))
                 )
 
                 # Read and decompress the table-of-contents.

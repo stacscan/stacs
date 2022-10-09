@@ -17,7 +17,7 @@ import zstandard
 from stacs.native import archive
 from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
-from stacs.scan.loader.format import xar
+from stacs.scan.loader.format import dmg, xar
 
 
 def path_hash(filepath: str) -> str:
@@ -211,6 +211,29 @@ def xar_handler(filepath: str, directory: str) -> None:
         )
 
 
+def dmg_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided DMG archive."""
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    # Attempt to unpack the archive.
+    try:
+        archive = dmg.DMG(filepath)
+        archive.extract(directory)
+    except FileAccessException as err:
+        raise FileAccessException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
+        )
+    except InvalidFileException as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {directory}: {err}"
+        )
+
+
 def libarchive_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided archive with libarchive."""
     try:
@@ -392,13 +415,11 @@ MIME_TYPE_HANDLERS = {
         ],
         "handler": zstd_handler,
     },
-    # DMGs can use a number of different compression formats, so pass to
-    # libarchive rather than using Python stdlib to extract.
     "application/x-apple-diskimage": {
         "offset": -512,
         "magic": [
             bytearray([0x6B, 0x6F, 0x6C, 0x79]),
         ],
-        "handler": libarchive_handler,
+        "handler": dmg_handler,
     },
 }

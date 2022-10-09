@@ -3,4 +3,4 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-from stacs.scan.loader.format import xar  # noqa: F401
+from stacs.scan.loader.format import dmg, xar  # noqa: F401
