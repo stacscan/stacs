@@ -151,6 +151,7 @@ def generate_findings(target: manifest.Entry, match: yara.Match) -> List[finding
         source = finding.Source(
             module=__name__,
             reference=match.rule,
+            tags=match.tags,
             version=match.meta.get("version", "UNKNOWN"),
             description=match.meta.get("description"),
         )

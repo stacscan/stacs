@@ -392,4 +392,13 @@ MIME_TYPE_HANDLERS = {
         ],
         "handler": zstd_handler,
     },
+    # DMGs can use a number of different compression formats, so pass to
+    # libarchive rather than using Python stdlib to extract.
+    "application/x-apple-diskimage": {
+        "offset": -512,
+        "magic": [
+            bytearray([0x6B, 0x6F, 0x6C, 0x79]),
+        ],
+        "handler": libarchive_handler,
+    },
 }

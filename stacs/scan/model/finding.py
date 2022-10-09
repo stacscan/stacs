@@ -3,6 +3,8 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
+from typing import List
+
 from pydantic import BaseModel, Extra, Field
 
 
@@ -30,7 +32,11 @@ class Source(BaseModel, extra=Extra.forbid):
         title="A description of the finding",
     )
     reference: str = Field(
-        title="A reference to the element which generated the finding."
+        title="A reference to the element which generated the finding.",
+    )
+    tags: List[str] = Field(
+        [],
+        title="A list of tags associated with the finding.",
     )
     version: str = Field(
         None,
