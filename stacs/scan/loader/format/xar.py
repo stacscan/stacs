@@ -125,7 +125,7 @@ class XAR:
 
         return candidates
 
-    def extract(self, destination=None):
+    def extract(self, destination):
         """Extract all entries from the XAR to the optional destination directory."""
         # Offset must be adjusted by the size of the ToC and the header. This is as the
         # offset is from the first byte AFTER the header and compressed ToC.

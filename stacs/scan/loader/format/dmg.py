@@ -1,11 +1,10 @@
-"""Provides an Apple Disk Image (DMG) parser and extrator.
+"""Provides an Apple Disk Image (DMG) parser and extractor.
 
 SPDX-License-Identifier: BSD-3-Clause
 """
 import os
 import plistlib
 import struct
-import xml.etree.ElementTree as ET
 from collections import namedtuple
 from typing import List
 
@@ -102,7 +101,7 @@ class DMGBlock(BaseModel, extra=Extra.forbid):
 
 
 class DMG:
-    """Provides an Apple Disk Image (DMG) parser and extrator."""
+    """Provides an Apple Disk Image (DMG) parser and extractor."""
 
     def __init__(self, filepath: str):
         self.archive = filepath
@@ -117,7 +116,7 @@ class DMG:
                     raise InvalidFileException("File does not appear to be a DMG")
 
                 # Rewind and attempt to read in header.
-                fin.seek(-DMG_HEADER_MAGIC_SZ)
+                fin.seek(-DMG_HEADER_MAGIC_SZ, 1)
                 self._header = DMGHeader._make(
                     struct.unpack(DMG_HEADER, fin.read(DMG_HEADER_SZ))
                 )
@@ -157,12 +156,12 @@ class DMG:
 
         return candidates
 
-    def extract(self, destination=None):
+    def extract(self, destination):
         """Extract all blocks from the DMG to the optional destination directory."""
-        parent = os.path.dirname(os.path.join(destination, "blocks"))
+        parent = os.path.basename(self.archive)
 
         try:
-            os.makedirs(parent, exist_ok=True)
+            os.makedirs(destination, exist_ok=True)
         except OSError as err:
             raise FileAccessException(
                 f"Unable to create directory during extraction: {err}"
@@ -170,7 +169,9 @@ class DMG:
 
         # Process each chunk inside of each block. A DMG has multiple blocks, and a
         # block has N chunks.
-        for idx, block in self._parse_blocks():
+        for idx, block in enumerate(self._parse_blocks()):
+            output = os.path.join(destination, f"{parent}.{idx}.blob")
+
             for chunk in block.chunks:
                 # We have our own chunk size used to keep memory low. So this oddly
                 # named chunk "chunk" is the DMG chunk split into chunks that meet our
@@ -183,10 +184,7 @@ class DMG:
                     continue
 
                 try:
-                    with (
-                        open(os.path.join(parent, f"{idx}.blob"), "wb") as fout,
-                        open(self.archive, "rb") as fin,
-                    ):
+                    with (open(output, "wb") as fout, open(self.archive, "rb") as fin):
                         # 0x00000000 - Zero Fill.
                         if chunk.type == 0x00000000:
                             for _ in range(0, chunk_chunk):
