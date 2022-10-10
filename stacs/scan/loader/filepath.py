@@ -23,6 +23,7 @@ def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
     """Generates a hash and determines the mimetype of the input file."""
     md5 = hashlib.md5()
     mime = None
+    winner = 0
 
     # Read the file in chunks.
     try:
@@ -30,20 +31,20 @@ def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
             while chunk := fin.read(CHUNK_SIZE):
                 md5.update(chunk)
 
-                # Attempt to determine the mime-type using the first and last
-                # chunk only. Note: This may need to change further in future.
-                if not mime:
-                    if fin.tell() <= CHUNK_SIZE or len(chunk) < CHUNK_SIZE:
-                        mime = archive.get_mimetype(chunk)
+                # Attempt to determine the mime-type using the first and last chunk.
+                # Note: This may need to change further in future.
+                if (not mime and fin.tell() <= CHUNK_SIZE) or len(chunk) < CHUNK_SIZE:
+                    (score, candidate) = archive.get_mimetype(chunk)
+
+                    # Swap the winner if the score is higher.
+                    if score > winner:
+                        mime = candidate
+                        winner = score
     except OSError as err:
         raise FileAccessException(f"Unable to open file at {filepath}: {err}")
 
     return Entry(
-        path=filepath,
-        md5=md5.hexdigest(),
-        mime=mime,
-        overlay=overlay,
-        parent=parent,
+        path=filepath, md5=md5.hexdigest(), mime=mime, overlay=overlay, parent=parent
     )
 
 

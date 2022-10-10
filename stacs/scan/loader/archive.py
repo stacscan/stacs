@@ -12,6 +12,8 @@ import os
 import shutil
 import tarfile
 import zipfile
+import zlib
+from typing import List, Tuple
 
 import zstandard
 from stacs.native import archive
@@ -188,6 +190,36 @@ def lzma_handler(filepath: str, directory: str) -> None:
         )
 
 
+def zlib_handler(filepath: str, directory: str) -> None:
+    """Attempts to extract the provided zlib archive."""
+    output = ".".join(os.path.basename(filepath).split(".")[:-1])
+
+    # Ensure that files with a proceeding dot are properly handled.
+    if len(output) < 1:
+        output = os.path.basename(filepath).lstrip(".")
+
+    try:
+        os.mkdir(directory, mode=0o700)
+    except OSError as err:
+        raise FileAccessException(
+            f"Unable to create unpack directory at {directory}: {err}"
+        )
+
+    try:
+        decompressor = zlib.decompressobj(wbits=zlib.MAX_WBITS)
+
+        with open(filepath, "rb") as fin:
+            with open(os.path.join(directory, output), "wb") as fout:
+
+                # Once again, read in chunks.
+                while compressed := fin.read(CHUNK_SIZE):
+                    fout.write(decompressor.decompress(compressed))
+    except zlib.error as err:
+        raise InvalidFileException(
+            f"Unable to extract archive {filepath} to {output}: {err}"
+        )
+
+
 def xar_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided XAR archive."""
     try:
@@ -287,22 +319,28 @@ def libarchive_handler(filepath: str, directory: str) -> None:
         )
 
 
-def get_mimetype(chunk: bytes) -> str:
+def get_mimetype(chunk: bytes) -> List[Tuple[int, str]]:
     """Attempts to locate the appropriate handler for a given file.
 
     This may fail if the required "magic" is at an offset greater than the CHUNK_SIZE.
     However, currently this is not an issue, but may need to be revisited later as more
     archive types are supported.
+
+    Returns a list of weights and MIME types as a tuple. This weight is specified by
+    handlers and is used to allow "container" formats, which may contain multiple other
+    files of various matching types, to "win" the match - due to a higher weight.
     """
+
     for name, options in MIME_TYPE_HANDLERS.items():
         offset = options["offset"]
         magic = options["magic"]
 
-        for candidate in magic:
-            if chunk[offset : (offset + len(candidate))] == candidate:  # noqa: E203
-                return name
+        # TODO: How to handle multiple matches in the same chunk? Is this this likely?
+        for format in magic:
+            if chunk[offset : (offset + len(format))] == format:  # noqa: E203
+                return (options["weight"], name)
 
-    return None
+    return (0, None)
 
 
 # Define all supported archives and their handlers. As we currently only support a small
@@ -312,6 +350,7 @@ def get_mimetype(chunk: bytes) -> str:
 # unpacking, as we're only looking for a small number of types.
 MIME_TYPE_HANDLERS = {
     "application/x-tar": {
+        "weight": 1,
         "offset": 257,
         "magic": [
             bytearray([0x75, 0x73, 0x74, 0x61, 0x72]),
@@ -319,6 +358,7 @@ MIME_TYPE_HANDLERS = {
         "handler": tar_handler,
     },
     "application/gzip": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x1F, 0x8B]),
@@ -326,6 +366,7 @@ MIME_TYPE_HANDLERS = {
         "handler": gzip_handler,
     },
     "application/x-bzip2": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x42, 0x5A, 0x68]),
@@ -333,6 +374,7 @@ MIME_TYPE_HANDLERS = {
         "handler": bzip2_handler,
     },
     "application/zip": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x50, 0x4B, 0x03, 0x04]),
@@ -341,7 +383,19 @@ MIME_TYPE_HANDLERS = {
         ],
         "handler": zip_handler,
     },
+    "application/zlib": {
+        "weight": 1,
+        "offset": 0,
+        "magic": [
+            bytearray([0x78, 0x01]),
+            bytearray([0x78, 0x5E]),
+            bytearray([0x78, 0x9C]),
+            bytearray([0x78, 0xDA]),
+        ],
+        "handler": zlib_handler,
+    },
     "application/x-xz": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00]),
@@ -349,6 +403,7 @@ MIME_TYPE_HANDLERS = {
         "handler": lzma_handler,
     },
     "application/x-rpm": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0xED, 0xAB, 0xEE, 0xDB]),
@@ -356,6 +411,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/x-iso9660-image": {
+        "weight": 1,
         "offset": 0x8001,
         "magic": [
             bytearray([0x43, 0x44, 0x30, 0x30, 0x31]),
@@ -363,6 +419,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/x-7z-compressed": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C]),
@@ -370,6 +427,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/x-cpio": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0xC7, 0x71]),  # 070707 in octal (Little Endian).
@@ -381,6 +439,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/x-xar": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x78, 0x61, 0x72, 0x21]),
@@ -388,6 +447,7 @@ MIME_TYPE_HANDLERS = {
         "handler": xar_handler,
     },
     "application/vnd.ms-cab-compressed": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x4D, 0x53, 0x43, 0x46]),
@@ -395,6 +455,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/x-archive": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E]),
@@ -402,6 +463,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/vnd.rar": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x52, 0x61, 0x72, 0x21, 0x1A, 0x07]),
@@ -409,6 +471,7 @@ MIME_TYPE_HANDLERS = {
         "handler": libarchive_handler,
     },
     "application/zstd": {
+        "weight": 1,
         "offset": 0,
         "magic": [
             bytearray([0x28, 0xB5, 0x2F, 0xFD]),
@@ -416,6 +479,7 @@ MIME_TYPE_HANDLERS = {
         "handler": zstd_handler,
     },
     "application/x-apple-diskimage": {
+        "weight": 2,  # "container" formats are weighted higher.
         "offset": -512,
         "magic": [
             bytearray([0x6B, 0x6F, 0x6C, 0x79]),
