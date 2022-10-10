@@ -2,6 +2,7 @@
 
 SPDX-License-Identifier: BSD-3-Clause
 """
+
 import os
 import plistlib
 import struct
@@ -184,7 +185,7 @@ class DMG:
                     continue
 
                 try:
-                    with open(output, "wb") as fout, open(self.archive, "rb") as fin:
+                    with open(output, "ab") as fout, open(self.archive, "rb") as fin:
                         # 0x00000000 - Zero Fill.
                         if chunk.type == 0x00000000:
                             for _ in range(0, chunk_chunk):
