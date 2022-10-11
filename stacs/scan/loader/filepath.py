@@ -34,7 +34,8 @@ def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
                 # Attempt to determine the mime-type using the first and last chunk.
                 # Note: This may need to change further in future.
                 if (not mime and fin.tell() <= CHUNK_SIZE) or len(chunk) < CHUNK_SIZE:
-                    (score, candidate) = archive.get_mimetype(chunk)
+                    start = False if len(chunk) < CHUNK_SIZE else True
+                    (score, candidate) = archive.get_mimetype(chunk, start)
 
                     # Swap the winner if the score is higher.
                     if score > winner:

@@ -325,21 +325,28 @@ def libarchive_handler(filepath: str, directory: str) -> None:
         )
 
 
-def get_mimetype(chunk: bytes) -> List[Tuple[int, str]]:
+def get_mimetype(chunk: bytes, start: bool) -> List[Tuple[int, str]]:
     """Attempts to locate the appropriate handler for a given file.
 
     This may fail if the required "magic" is at an offset greater than the CHUNK_SIZE.
     However, currently this is not an issue, but may need to be revisited later as more
     archive types are supported.
 
+    The start flag is used to indicate whether the current chunk is from the start of
+    the file, or the end of the file. Today we only support checking the first and last
+    chunk.
+
     Returns a list of weights and MIME types as a tuple. This weight is specified by
     handlers and is used to allow "container" formats, which may contain multiple other
     files of various matching types, to "win" the match - due to a higher weight.
     """
-
     for name, options in MIME_TYPE_HANDLERS.items():
         offset = options["offset"]
         magic = options["magic"]
+
+        # If looking at the end of the file, skip all non-negative offsets.
+        if not start and offset >= 0:
+            continue
 
         # TODO: How to handle multiple matches in the same chunk? Is this this likely?
         for format in magic:
