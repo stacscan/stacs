@@ -198,6 +198,8 @@ class DMG:
 
                         # For all other types, write to disk, as STACS may be able to
                         # decompress or handle these formats natively.
+                        fin.seek(chunk.compressed_offset)
+
                         for _ in range(0, chunk_chunk):
                             fout.write(fin.read(CHUNK_SIZE))
                             bytes_read += CHUNK_SIZE
