@@ -88,9 +88,9 @@ def gzip_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided gzip archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
-    # Ensure that files with a proceeding dot are properly handled.
+    # No dots? Just use the name as is.
     if len(output) < 1:
-        output = os.path.basename(filepath).lstrip(".")
+        output = filepath
 
     # Although gzip files cannot contain more than one file, we'll still spool into
     # a subdirectory under the cache for consistency.
@@ -117,6 +117,10 @@ def bzip2_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided bzip2 archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
+    # No dots? Just use the name as is.
+    if len(output) < 1:
+        output = filepath
+
     # Like gzip, bzip2 cannot support more than a single file. Again, we'll spool into
     # a subdirectory for consistency.
     try:
@@ -141,6 +145,10 @@ def bzip2_handler(filepath: str, directory: str) -> None:
 def zstd_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided zstd archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
+
+    # No dots? Just use the name as is.
+    if len(output) < 1:
+        output = filepath
 
     # zstd does not appear to provide a native mechanism to compress multiple files,
     # and recommend 'to combine zstd with tar'.
@@ -167,9 +175,9 @@ def lzma_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided xz / lzma archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
-    # Ensure that files with a proceeding dot are properly handled.
+    # No dots? Just use the name as is.
     if len(output) < 1:
-        output = os.path.basename(filepath).lstrip(".")
+        output = filepath
 
     # Although xz files cannot contain more than one file, we'll still spool into
     # a subdirectory under the cache for consistency.
@@ -194,9 +202,9 @@ def zlib_handler(filepath: str, directory: str) -> None:
     """Attempts to extract the provided zlib archive."""
     output = ".".join(os.path.basename(filepath).split(".")[:-1])
 
-    # Ensure that files with a proceeding dot are properly handled.
+    # No dots? Just use the name as is.
     if len(output) < 1:
-        output = os.path.basename(filepath).lstrip(".")
+        output = filepath
 
     try:
         os.mkdir(directory, mode=0o700)
@@ -210,8 +218,6 @@ def zlib_handler(filepath: str, directory: str) -> None:
 
         with open(filepath, "rb") as fin:
             with open(os.path.join(directory, output), "wb") as fout:
-
-                # Once again, read in chunks.
                 while compressed := fin.read(CHUNK_SIZE):
                     fout.write(decompressor.decompress(compressed))
     except zlib.error as err:

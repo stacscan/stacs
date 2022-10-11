@@ -3,9 +3,12 @@
 SPDX-License-Identifier: BSD-3-Clause
 """
 
+import bz2
+import lzma
 import os
 import plistlib
 import struct
+import zlib
 from collections import namedtuple
 from typing import List
 
@@ -174,37 +177,35 @@ class DMG:
             output = os.path.join(destination, f"{parent}.{idx}.blob")
 
             for chunk in block.chunks:
-                # We have our own chunk size used to keep memory low. So this oddly
-                # named chunk "chunk" is the DMG chunk split into chunks that meet our
-                # size requirements.
-                bytes_read = 0
-                chunk_chunk = int(chunk.compressed_length / CHUNK_SIZE)
-
                 # Skip Ignored, Comment, and Last blocks (respectively).
                 if chunk.type in [0x00000002, 0x7FFFFFFE, 0xFFFFFFFF]:
                     continue
 
                 try:
-                    with open(output, "ab") as fout, open(self.archive, "rb") as fin:
-                        # 0x00000000 - Zero Fill.
-                        if chunk.type == 0x00000000:
-                            for _ in range(0, chunk_chunk):
-                                fout.write("\x00" * CHUNK_SIZE)
-                                bytes_read += CHUNK_SIZE
-
-                            # Last partial chunk.
-                            fout.write(b"\x00" * (chunk.compressed_length - bytes_read))
-                            continue
-
-                        # For all other types, write to disk, as STACS may be able to
-                        # decompress or handle these formats natively.
+                    with open(self.archive, "rb") as fin, open(output, "ab") as fout:
                         fin.seek(chunk.compressed_offset)
 
-                        for _ in range(0, chunk_chunk):
-                            fout.write(fin.read(CHUNK_SIZE))
-                            bytes_read += CHUNK_SIZE
+                        # 0x80000005 - Zlib.
+                        if chunk.type == 0x80000005:
+                            fout.write(
+                                zlib.decompress(fin.read(chunk.compressed_length))
+                            )
 
-                        # Read the last partial chunk.
-                        fout.write(fin.read(chunk.compressed_length - bytes_read))
-                except OSError as err:
+                        # 0x80000005 - BZ2.
+                        if chunk.type == 0x80000006:
+                            fout.write(
+                                bz2.decompress(fin.read(chunk.compressed_length))
+                            )
+
+                        # 0x80000005 - LZMA.
+                        if chunk.type == 0x80000008:
+                            fout.write(
+                                lzma.decompress(fin.read(chunk.compressed_length))
+                            )
+
+                        # 0x00000000 - Zero Fill.
+                        if chunk.type == 0x00000000:
+                            fout.write(b"\x00" * chunk.compressed_length)
+                            continue
+                except (OSError, lzma.LZMAError, ValueError) as err:
                     raise InvalidFileException(err)
