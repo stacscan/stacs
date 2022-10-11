@@ -13,7 +13,6 @@ from collections import namedtuple
 from typing import List
 
 from pydantic import BaseModel, Extra, Field
-from stacs.scan.constants import CHUNK_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFileException
 
 # Structures names and geometry are via "Demystifying the DMG File Format"
