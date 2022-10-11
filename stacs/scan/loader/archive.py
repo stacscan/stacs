@@ -344,7 +344,10 @@ def get_mimetype(chunk: bytes, start: bool) -> List[Tuple[int, str]]:
         offset = options["offset"]
         magic = options["magic"]
 
-        # If looking at the end of the file, skip all non-negative offsets.
+        # If looking at the last chunk, only use negative offsets. This is to prevent
+        # false positives as position 0 in the last chunk is actually N bytes into the
+        # file. This is especially problematic for formats with short magic numbers,
+        # such as zlib.
         if not start and offset >= 0:
             continue
 
