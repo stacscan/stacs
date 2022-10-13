@@ -90,7 +90,7 @@ def gzip_handler(filepath: str, directory: str) -> None:
 
     # No dots? Just use the name as is.
     if len(output) < 1:
-        output = filepath
+        output = os.path.basename(filepath)
 
     # Although gzip files cannot contain more than one file, we'll still spool into
     # a subdirectory under the cache for consistency.
@@ -119,7 +119,7 @@ def bzip2_handler(filepath: str, directory: str) -> None:
 
     # No dots? Just use the name as is.
     if len(output) < 1:
-        output = filepath
+        output = os.path.basename(filepath)
 
     # Like gzip, bzip2 cannot support more than a single file. Again, we'll spool into
     # a subdirectory for consistency.
@@ -148,7 +148,7 @@ def zstd_handler(filepath: str, directory: str) -> None:
 
     # No dots? Just use the name as is.
     if len(output) < 1:
-        output = filepath
+        output = os.path.basename(filepath)
 
     # zstd does not appear to provide a native mechanism to compress multiple files,
     # and recommend 'to combine zstd with tar'.
@@ -177,7 +177,7 @@ def lzma_handler(filepath: str, directory: str) -> None:
 
     # No dots? Just use the name as is.
     if len(output) < 1:
-        output = filepath
+        output = os.path.basename(filepath)
 
     # Although xz files cannot contain more than one file, we'll still spool into
     # a subdirectory under the cache for consistency.
@@ -204,7 +204,7 @@ def zlib_handler(filepath: str, directory: str) -> None:
 
     # No dots? Just use the name as is.
     if len(output) < 1:
-        output = filepath
+        output = os.path.basename(filepath)
 
     try:
         os.mkdir(directory, mode=0o700)
