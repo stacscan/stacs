@@ -34,6 +34,10 @@ class Entry(BaseModel, extra=Extra.forbid):
         None,
         title="The mimetype of the file.",
     )
+    size: int = Field(
+        None,
+        title="The size of the file.",
+    )
 
 
 class Format(BaseModel, extra=Extra.forbid):

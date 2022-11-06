@@ -27,6 +27,8 @@ def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
 
     # Read the file in chunks.
     try:
+        stat = os.stat(filepath)
+
         with open(filepath, "rb") as fin:
             while chunk := fin.read(CHUNK_SIZE):
                 md5.update(chunk)
@@ -45,7 +47,12 @@ def metadata(filepath: str, overlay: str = None, parent: str = None) -> Entry:
         raise FileAccessException(f"Unable to open file at {filepath}: {err}")
 
     return Entry(
-        path=filepath, md5=md5.hexdigest(), mime=mime, overlay=overlay, parent=parent
+        path=filepath,
+        md5=md5.hexdigest(),
+        mime=mime,
+        overlay=overlay,
+        parent=parent,
+        size=stat.st_size,
     )
 
 
