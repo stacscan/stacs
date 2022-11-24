@@ -131,7 +131,7 @@ def generate_location(target: manifest.Entry, offset: int) -> finding.Location:
                     line_number += fin.read(offset).count("\n")
                 else:
                     line_number += fin.read(CHUNK_SIZE).count("\n")
-    except UnicodeDecodeError as err:
+    except UnicodeDecodeError:
         # It's possible to get into a state where the detected mime-type of a file is
         # incorrect, resulting in unprocessable binary data making it here. In these
         # cases we'll just bail early and report the number of bytes into the file of
