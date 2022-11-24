@@ -105,6 +105,10 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
 
+      - name: Wait a minute for PyPi to catch up
+        run: sleep 60s
+        shell: bash
+
       - name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
