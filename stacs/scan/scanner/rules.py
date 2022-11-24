@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
 import yara
+
 from stacs.scan.constants import CHUNK_SIZE, WINDOW_SIZE
 from stacs.scan.exceptions import FileAccessException, InvalidFormatException
 from stacs.scan.loader import archive
@@ -130,6 +131,12 @@ def generate_location(target: manifest.Entry, offset: int) -> finding.Location:
                     line_number += fin.read(offset).count("\n")
                 else:
                     line_number += fin.read(CHUNK_SIZE).count("\n")
+    except UnicodeDecodeError as err:
+        # It's possible to get into a state where the detected mime-type of a file is
+        # incorrect, resulting in unprocessable binary data making it here. In these
+        # cases we'll just bail early and report the number of bytes into the file of
+        # the finding. Exactly as we do for known binary files.
+        return finding.Location(offset=offset)
     except OSError as err:
         raise FileAccessException(err)
 
