@@ -55,10 +55,10 @@ setup(
         ]
     },
     install_requires=[
-        "click==8.1.3",
-        "yara-python==4.2.3",
-        "pydantic==1.10.2",
-        "colorama==0.4.5",
-        "zstandard==0.18.0",
+        "click>=8.1.0,<9.0",
+        "yara-python>=4.2.0,<5.0",
+        "pydantic>=1.10.0,<2.0",
+        "colorama>=0.4.0,<1.0",
+        "zstandard>=0.18.0,<1.0",
     ],
 )
