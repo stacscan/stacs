@@ -35,6 +35,7 @@ ext_modules = [
 
 setup(
     name=__title__,
+    author="Peter",
     description="Static Token And Credential Scanner.",
     packages=find_namespace_packages(include=["stacs.*"]),
     long_description=long_description,
