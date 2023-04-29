@@ -9,7 +9,7 @@ jobs:
   check:
     strategy:
       matrix:
-        python: [3.9, 3.10, 3.11]
+        python: ['3.9', '3.10', '3.11']
 
     runs-on: ubuntu-latest
     steps:
@@ -30,10 +30,10 @@ jobs:
           python -m pip install --upgrade pip wheel setuptools
           pip install tox
 
-      - name: Run Linter (${{ matrix.python }})
+      - name: Run Linters (${{ matrix.python }})
         run: |
           tox -e linters
 
-      - name: Run Tests (3.9)
+      - name: Run Tests (${{ matrix.python }})
         run: |
           tox -e py3
