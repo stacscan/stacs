@@ -38,6 +38,9 @@ tests = [
     "ipython",
 ]
 
+[tool.setuptools]
+packages = ["stacs"]
+
 [tool.setuptools.dynamic]
 version = {attr = "stacs.__about__.__version__"}
 
