@@ -1,0 +1,126 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "pybind11"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stacs"
+readme = "README.md"
+description = "Static Token And Credential Scanner."
+requires-python = ">=3.8"
+dynamic = ["version"]
+authors = [{name = "Peter Adkins"}]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Natural Language :: English",
+]
+dependencies = [
+    "click>=8.1.0,<9.0",
+    "yara-python>=4.2.0,<5.0",
+    "pydantic>=1.10.0,<2.0",
+    "colorama>=0.4.0,<1.0",
+    "zstandard>=0.18.0,<1.0",
+]
+
+[project.optional-dependencies]
+tests = [
+    "black",
+    "coverage",
+    "ruff",
+    "types-setuptools",
+    "mypy",
+    "pip-tools",
+    "mock",
+    "pytest",
+    "pytest-cov",
+    "responses",
+    "tox",
+    "ipython",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "stacs.__about__.__version__"}
+
+[project.scripts]
+stacs = "stacs.scan.entrypoint.cli:main"
+
+[tool.ruff]
+line-length = 88
+extend-select = [
+  "B",   # flake8-bugbear
+  "I",   # isort
+]
+ignore = [
+  "B904",
+]
+
+[tool.mypy]
+files = [
+    "./stacs/**/*.py",
+    "./tests/**/*.py"
+]
+allow_redefinition = false
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_untyped_calls = false
+ignore_errors = false
+ignore_missing_imports = true
+implicit_reexport = false
+local_partial_types = true
+strict_optional = true
+strict_equality = true
+no_implicit_optional = true
+warn_no_return = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+junit_family = "xunit2"
+norecursedirs = ".*"
+self-contained-html = true
+testpaths = [
+    "tests"
+]
+addopts = """
+    --strict
+    --tb=auto
+    --cov=stacs
+    --cov-report=term-missing:skip-covered
+    --cov-branch
+    -p no:doctest
+    -p no:warnings
+    -s
+"""
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    envlist = linters,py3
+
+    [testenv]
+    pip_version = pip
+    extras = tests
+    commands = pytest -c pyproject.toml
+    srcs = stacs
+
+    [testenv:linters]
+    basepython = python3
+    usedevelop = true
+    commands =
+        {[testenv:ruff]commands}
+        {[testenv:mypy]commands}
+
+    [testenv:ruff]
+    basepython = python3
+    skip_install = true
+    commands =
+        ruff check {[testenv]srcs}
+
+    [testenv:mypy]
+    basepython3 = python3
+    skip_install = true
+    commands =
+        - mypy --config-file pyproject.toml {[testenv]srcs}
+"""
