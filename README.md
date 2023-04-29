@@ -1,5 +1,5 @@
-[![Shield](https://img.shields.io/github/workflow/status/stacscan/stacs/Check?label=Tests&style=flat-square)](https://github.com/stacscan/stacs/actions?workflow=Check)
-[![Shield](https://img.shields.io/github/workflow/status/stacscan/stacs/Publish?label=Deploy&style=flat-square)](https://github.com/stacscan/stacs/actions?workflow=Publish)
+[![Shield](https://img.shields.io/github/workflow/status/stacscan/stacs/check.yml?label=Tests&style=flat-square)](https://github.com/stacscan/stacs/actions?workflow=Check)
+[![Shield](https://img.shields.io/github/workflow/status/stacscan/stacs/publish.yml?label=Deploy&style=flat-square)](https://github.com/stacscan/stacs/actions?workflow=Publish)
 [![Shield](https://img.shields.io/docker/pulls/stacscan/stacs?style=flat-square)](https://hub.docker.com/r/stacscan/stacs)
 [![Shield](https://img.shields.io/docker/image-size/stacscan/stacs?style=flat-square)](https://hub.docker.com/r/stacscan/stacs/tags?page=1&ordering=last_updated)
 [![Shield](https://img.shields.io/twitter/follow/stacscan?style=flat-square)](https://twitter.com/stacscan)
