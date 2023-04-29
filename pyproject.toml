@@ -116,7 +116,6 @@ legacy_tox_ini = """
     usedevelop = true
     commands =
         {[testenv:ruff]commands}
-        {[testenv:mypy]commands}
 
     [testenv:ruff]
     basepython = python3
