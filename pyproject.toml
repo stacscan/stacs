@@ -38,11 +38,8 @@ tests = [
     "ipython",
 ]
 
-[tool.setuptools]
-packages = ["stacs"]
-
 [tool.setuptools.dynamic]
-version = {attr = "stacs.__about__.__version__"}
+version = {attr = "stacs.scan.__about__.__version__"}
 
 [project.scripts]
 stacs = "stacs.scan.entrypoint.cli:main"
