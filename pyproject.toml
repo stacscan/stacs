@@ -41,6 +41,10 @@ tests = [
 [tool.setuptools.dynamic]
 version = {attr = "stacs.scan.__about__.__version__"}
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["stacs.*"]
+
 [project.scripts]
 stacs = "stacs.scan.entrypoint.cli:main"
 
