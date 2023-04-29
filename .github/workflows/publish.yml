@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04, macos-10.15, macos-11, macos-12]
+        os: [ubuntu-22.04, ubuntu-20.04, macos-10.15, macos-11, macos-12]
 
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
         run: brew install libarchive
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.7.0
+        run: python -m pip install cibuildwheel==2.12.3
 
       - name: Build wheels (macOS)
         run: python -m cibuildwheel --output-dir wheelhouse
@@ -64,7 +64,7 @@ jobs:
       - name: Configure Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11
 
       - name: Build Python sdist
         run: |
