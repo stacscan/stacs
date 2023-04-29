@@ -7,6 +7,10 @@ on:
 
 jobs:
   check:
+    strategy:
+      matrix:
+        python: [3.9, 3.10, 3.11]
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,38 +20,20 @@ jobs:
           sudo apt update
           sudo apt install -y libarchive13 libarchive-dev
 
-      - name: Configure Python 3.9
+      - name: Configure Python (${{ matrix.python }})
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python }}
 
       - name: Install Tox
         run: |
           python -m pip install --upgrade pip wheel setuptools
           pip install tox
 
-      - name: Run Linter (3.9)
+      - name: Run Linter (${{ matrix.python }})
         run: |
-          tox -e py39-lint
+          tox -e linters
 
       - name: Run Tests (3.9)
         run: |
-          tox -e py39-test
-
-      - name: Configure Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: Install Tox
-        run: |
-          python -m pip install --upgrade pip wheel setuptools
-          pip install tox
-
-      - name: Run Linter (3.8)
-        run: |
-          tox -e py38-lint
-
-      - name: Run Tests (3.8)
-        run: |
-          tox -e py38-test
+          tox -e py3
