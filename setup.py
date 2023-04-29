@@ -1,29 +1,12 @@
-"""STACS Setup.
-
-SPDX-License-Identifier: BSD-3-Clause
-"""
+"""Setup required for pybind11 built native code only."""
 
 import os
+import platform
+import subprocess
+from typing import List
 
-try:
-    from pybind11.setup_helpers import Pybind11Extension
-except ImportError:
-    from setuptools import Extension as Pybind11Extension
-
-from setuptools import find_namespace_packages, setup
-
-# Explicitly pull in the contents of our package's __about__ file due to constraints on
-# the previous STACS structure.
-__uri__ = None
-__title__ = None
-__author__ = None
-__version__ = None
-
-path = os.path.dirname(os.path.abspath(__file__))
-exec(open(os.path.join(path, "stacs/scan/__about__.py")).read())
-
-# For PyPi to use the contents of README.md
-long_description = open(os.path.join(path, "README.md")).read()
+from pybind11.setup_helpers import Pybind11Extension
+from setuptools import setup
 
 ext_modules = [
     Pybind11Extension(
@@ -33,32 +16,30 @@ ext_modules = [
     ),
 ]
 
-setup(
-    name=__title__,
-    description="Static Token And Credential Scanner.",
-    packages=find_namespace_packages(include=["stacs.*"]),
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url=__uri__,
-    version=__version__,
-    ext_modules=ext_modules,
-    setup_requires=[
-        "pybind11",
-    ],
-    extras_require={
-        "development": [
-            "tox",
-            "black",
-            "flake8",
-            "isort",
-            "pybind11",
+
+def run(command: List[str]):
+    """Run a command, returning the output as a string or an exception on failure."""
+    result = subprocess.run(command, capture_output=True, check=True)
+    return str(result.stdout, "utf-8").strip()
+
+
+# macOS requires a bit of special handling to ensure that the - likely - brew installed
+# libarchive is discoverable. The macOS built-in libarchive is no good, as it's too
+# old.
+if platform.system() == "Darwin":
+    libarchive = run(["brew", "--cellar", "libarchive"])
+    libarchive_headers = run(["find", libarchive, "-name", "include", "-type", "d"])
+    libarchive_pkgconfig = run(["find", libarchive, "-name", "pkgconfig", "-type", "d"])
+
+    # Setup the environment for the build.
+    os.environ["LDFLAGS"] = f"-L{libarchive_headers}"
+    os.environ["PKG_CONFIG"] = libarchive_pkgconfig
+    os.environ["CPPFLAGS"] = " ".join(
+        [
+            os.environ.get("CPPFLAGS", ""),
+            "-std=c++11",
+            f"-I{libarchive_headers}",
         ]
-    },
-    install_requires=[
-        "click>=8.1.0,<9.0",
-        "yara-python>=4.2.0,<5.0",
-        "pydantic>=1.10.0,<2.0",
-        "colorama>=0.4.0,<1.0",
-        "zstandard>=0.18.0,<1.0",
-    ],
-)
+    )
+
+setup(ext_modules=ext_modules, packages=[])
