@@ -42,4 +42,4 @@ if platform.system() == "Darwin":
         ]
     )
 
-setup(ext_modules=ext_modules)
+setup(ext_modules=ext_modules, packages=[])
