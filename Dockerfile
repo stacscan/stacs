@@ -18,7 +18,6 @@ LABEL org.opencontainers.image.version=$VERSION
 
 # Install STACS into the container.
 WORKDIR /opt/stacs
-COPY requirements.txt setup.py setup.cfg ./
 COPY wrapper/stacs-scan /usr/bin
 
 RUN apk add --no-cache git gcc musl-dev zstd && \
